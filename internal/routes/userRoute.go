@@ -13,3 +13,7 @@ func RegisterUserRoute(router *gin.Engine){
 func LoginUserRoute(router *gin.Engine){
 	router.POST("/loginUser", handlers.LoginUser)
 }
+
+func LogoutUserRoute(router *gin.Engine){
+	router.POST("/logoutUser", handlers.LogoutUser)
+}

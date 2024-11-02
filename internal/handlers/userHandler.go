@@ -5,6 +5,7 @@ import (
 	"wow-bato-backend/internal/models"
 	"wow-bato-backend/internal/services"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,5 +40,32 @@ func LoginUser(c *gin.Context){
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "user": user})
+	session := sessions.Default(c)
+	session.Set("user_id", user.ID)
+	session.Set("user_role", user.Role)
+	session.Set("authenticated", true)
+
+	
+
+	if err := session.Save(); err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "user": user, "sessionStatus": session.Get("authenticated")})
+}
+
+func LogoutUser(c *gin.Context){
+
+	session := sessions.Default(c)
+
+	session.Clear()
+
+	if err := session.Save(); err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged out successfully"})
 }
