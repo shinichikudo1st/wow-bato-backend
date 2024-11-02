@@ -17,3 +17,7 @@ func LoginUserRoute(router *gin.Engine){
 func LogoutUserRoute(router *gin.Engine){
 	router.POST("/logoutUser", handlers.LogoutUser)
 }
+
+func CheckAuthRoute(router *gin.Engine){
+	router.GET("/checkAuth", handlers.CheckAuth)
+}

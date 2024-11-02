@@ -35,7 +35,7 @@ func main(){
 	routes.RegisterUserRoute(router)
 	routes.LoginUserRoute(router)
 	routes.LogoutUserRoute(router)
-
+	routes.CheckAuthRoute(router)
 	router.Run(":8080")
 
 }

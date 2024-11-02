@@ -69,3 +69,15 @@ func LogoutUser(c *gin.Context){
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged out successfully"})
 }
+
+func CheckAuth(c *gin.Context){
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") == nil {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated")})
+}
+
