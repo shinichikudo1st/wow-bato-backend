@@ -9,3 +9,7 @@ import (
 func RegisterUserRoute(router *gin.Engine){
 	router.POST("/registerUser", handlers.RegisterUser)
 }
+
+func LoginUserRoute(router *gin.Engine){
+	router.POST("/loginUser", handlers.LoginUser)
+}
