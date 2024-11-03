@@ -14,8 +14,8 @@ type User struct {
 	LastName 	string 	  `gorm:"not null"`
 	Role     	string 	  `gorm:"not null"`
 	Contact  	string 	  `gorm:"not null"`
-	BarangayID 	uint 	  `gorm:"not null"`
-	Barangay 	Barangay  `gorm:"foreignKey:BarangayID"`
+	Barangay_ID uint 	  `gorm:"not null"`
+	Barangay 	Barangay  `gorm:"foreignKey:Barangay_ID"`
 	
 }
 
@@ -24,9 +24,9 @@ type Barangay struct {
 	Name     			string `gorm:"not null;unique"`
 	City     			string `gorm:"not null"`
 	Region   			string `gorm:"not null"`
-	Users    			[]User `gorm:"foreignKey:BarangayID"`
-	Projects 			[]Project `gorm:"foreignKey:BarangayID"`
-	Budget_Categories 	[]Budget_Category `gorm:"foreignKey:BarangayID"`
+	Users    			[]User `gorm:"foreignKey:Barangay_ID"`
+	Projects 			[]Project `gorm:"foreignKey:Barangay_ID"`
+	Budget_Categories 	[]Budget_Category `gorm:"foreignKey:Barangay_ID"`
 
 }
 
@@ -34,8 +34,8 @@ type Budget_Category struct {
 	gorm.Model
 	Name     			string `gorm:"not null"`
 	Description 		string `gorm:"type:text"`
-	BarangayID 			uint   `gorm:"not null"`
-	Barangay 			Barangay `gorm:"foreignKey:BarangayID"`
+	Barangay_ID 			uint   `gorm:"not null"`
+	Barangay 			Barangay `gorm:"foreignKey:Barangay_ID"`
 	Budget_Items 		[]Budget_Item `gorm:"foreignKey:Budget_CategoryID"`
 
 }
@@ -69,8 +69,8 @@ type Project struct {
 	StartDate time.Time `gorm:"not null"`
 	EndDate time.Time `gorm:"not null"`
 	Status string `gorm:"not null"` //planned, ongoing, completed
-	BarangayID uint `gorm:"not null"`
-	Barangay Barangay `gorm:"foreignKey:BarangayID"`
+	Barangay_ID uint `gorm:"not null"`
+	Barangay Barangay `gorm:"foreignKey:Barangay_ID"`
 	Budget_Items []Budget_Item `gorm:"many2many:project_budget_items"`
 }
 

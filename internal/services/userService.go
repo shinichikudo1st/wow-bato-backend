@@ -24,6 +24,7 @@ func RegisterUser(registerUser models.RegisterUser) error {
 		LastName:  	registerUser.LastName,
 		Role:      	registerUser.Role,
 		Contact:   	registerUser.Contact,
+		Barangay_ID: registerUser.Barangay_ID,
 	}
 
 	result := db.Create(&user)
