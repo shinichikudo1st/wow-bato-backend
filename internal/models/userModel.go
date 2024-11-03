@@ -20,3 +20,7 @@ type AddBarangay struct {
 	City   string `json:"city"`
 	Region string `json:"region"`
 }
+
+type DeleteBarangay struct {
+	Barangay_ID uint `json:"barangay_ID"`
+}

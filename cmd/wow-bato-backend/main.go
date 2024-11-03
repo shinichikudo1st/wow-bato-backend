@@ -36,6 +36,10 @@ func main(){
 	routes.LoginUserRoute(router)
 	routes.LogoutUserRoute(router)
 	routes.CheckAuthRoute(router)
+
+	routes.AddBarangayRoute(router)
+	routes.DeleteBarangayRoute(router)
+
 	router.Run(":8080")
 
 }

@@ -36,7 +36,7 @@ type Budget_Category struct {
 	Description 		string `gorm:"type:text"`
 	Barangay_ID 			uint   `gorm:"not null"`
 	Barangay 			Barangay `gorm:"foreignKey:Barangay_ID"`
-	Budget_Items 		[]Budget_Item `gorm:"foreignKey:Budget_CategoryID"`
+	Budget_Items 		[]Budget_Item `gorm:"foreignKey:CategoryID"`
 
 }
 
