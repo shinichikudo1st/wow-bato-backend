@@ -12,8 +12,8 @@ func AddNewBarangay(newBarangay models.AddBarangay) error {
 	}
 
 	barangay := models.Barangay{
-		Name: newBarangay.Name,
-		City: newBarangay.City,
+		Name:   newBarangay.Name,
+		City:   newBarangay.City,
 		Region: newBarangay.Region,
 	}
 
@@ -31,6 +31,20 @@ func DeleteBarangay(barangayToDelete models.DeleteBarangay) error {
 
 	var barangay models.Barangay
 	result := db.Where("Barangay_ID = ?", barangayToDelete.Barangay_ID).Delete(&barangay)
+
+	return result.Error
+}
+
+func UpdateBarangay(barangayToUpdate models.UpdateBarangay) error {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return err
+	}
+
+	var barangay models.Barangay
+	result := db.Model(&barangay).Where("barangay_ID = ?", barangayToUpdate).Updates(models.Barangay{
+		Name: barangayToUpdate.Name, City: barangayToUpdate.City, Region: barangayToUpdate.Region,
+	})
 
 	return result.Error
 }
