@@ -12,7 +12,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func main(){
+func main() {
 	err := godotenv.Load("../../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -23,7 +23,6 @@ func main(){
 	store := cookie.NewStore([]byte(os.Getenv("SESSION_SECRET")))
 	router.Use(sessions.Sessions("mysession", store))
 
-
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -31,7 +30,7 @@ func main(){
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
-	
+
 	routes.RegisterUserRoute(router)
 	routes.LoginUserRoute(router)
 	routes.LogoutUserRoute(router)
@@ -39,6 +38,7 @@ func main(){
 
 	routes.AddBarangayRoute(router)
 	routes.DeleteBarangayRoute(router)
+	routes.UpdateBarangayRoute(router)
 
 	router.Run(":8080")
 

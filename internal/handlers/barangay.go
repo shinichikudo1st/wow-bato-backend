@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AddBarangay(c *gin.Context){
+func AddBarangay(c *gin.Context) {
 	session := sessions.Default(c)
 
 	if session.Get("authenticated") != true {
@@ -31,12 +31,11 @@ func AddBarangay(c *gin.Context){
 		return
 	}
 
-	
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully Added New Barangay"})
 
 }
 
-func DeleteBarangay(c *gin.Context){
+func DeleteBarangay(c *gin.Context) {
 	session := sessions.Default(c)
 
 	if session.Get("authenticated") != true {
@@ -59,4 +58,20 @@ func DeleteBarangay(c *gin.Context){
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully deleted the Barangay"})
+}
+
+func UpdateBarangay(c *gin.Context) {
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized: Access Denied"})
+		return
+	}
+
+	var updateBarangay models.UpdateBarangay
+
+	if err := c.ShouldBindJSON(&updateBarangay); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 }

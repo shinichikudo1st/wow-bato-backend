@@ -24,3 +24,7 @@ type AddBarangay struct {
 type DeleteBarangay struct {
 	Barangay_ID uint `json:"barangay_ID"`
 }
+
+type UpdateBarangay struct {
+	Barangay_ID uint `json:"barangay_ID"`
+}

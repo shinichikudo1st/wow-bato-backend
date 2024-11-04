@@ -6,10 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AddBarangayRoute(router *gin.Engine){
+func AddBarangayRoute(router *gin.Engine) {
 	router.POST("/addBarangay", handlers.AddBarangay)
 }
 
-func DeleteBarangayRoute(router *gin.Engine){
+func DeleteBarangayRoute(router *gin.Engine) {
 	router.DELETE("/deleteBarangay", handlers.DeleteBarangay)
+}
+
+func UpdateBarangayRoute(router *gin.Engine) {
+	router.PUT("/updateBarangay", handlers.UpdateBarangay)
 }
