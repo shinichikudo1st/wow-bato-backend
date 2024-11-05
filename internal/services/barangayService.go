@@ -42,9 +42,16 @@ func UpdateBarangay(barangayToUpdate models.UpdateBarangay) error {
 	}
 
 	var barangay models.Barangay
-	result := db.Model(&barangay).Where("barangay_ID = ?", barangayToUpdate).Updates(models.Barangay{
-		Name: barangayToUpdate.Name, City: barangayToUpdate.City, Region: barangayToUpdate.Region,
-	})
+
+	if err := db.Where("Barangay_ID = ?", barangayToUpdate.Barangay_ID).First(&barangay).Error; err != nil {
+		return err
+	}
+
+	barangay.Name = barangayToUpdate.Name
+	barangay.City = barangayToUpdate.City
+	barangay.Region = barangayToUpdate.Region
+
+	result := db.Save(&barangay)
 
 	return result.Error
 }
