@@ -1,6 +1,7 @@
 package services
 
 import (
+	"strconv"
 	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
 )
@@ -56,14 +57,24 @@ func UpdateBarangay(barangayToUpdate models.UpdateBarangay) error {
 	return result.Error
 }
 
-func GetAllBarangay() ([]models.Barangay, error) {
+func GetAllBarangay(limit string, page string) ([]models.Barangay, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
 		return nil, err
 	}
 
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		return nil, err
+	}
+
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, err
+	}
+
 	var barangay []models.Barangay
-	result := db.Find(&barangay)
+	result := db.Limit(limitInt).Offset(pageInt).Find(&barangay)
 
 	return barangay, result.Error
 }
