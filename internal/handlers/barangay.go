@@ -35,6 +35,24 @@ func AddBarangay(c *gin.Context) {
 
 }
 
+func GetAllBarangay(c *gin.Context){
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+		return
+	}
+
+	barangay, err := services.GetAllBarangay()
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully fetched Barangays", "data": barangay})
+}
+
 func DeleteBarangay(c *gin.Context) {
 	session := sessions.Default(c)
 

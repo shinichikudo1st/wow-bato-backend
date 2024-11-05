@@ -17,3 +17,7 @@ func DeleteBarangayRoute(router *gin.Engine) {
 func UpdateBarangayRoute(router *gin.Engine) {
 	router.PUT("/updateBarangay", handlers.UpdateBarangay)
 }
+
+func GetAllBarangay(router *gin.Engine){
+	router.GET("/getAllBarangay", handlers.GetAllBarangay)
+}

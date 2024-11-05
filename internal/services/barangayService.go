@@ -55,3 +55,15 @@ func UpdateBarangay(barangayToUpdate models.UpdateBarangay) error {
 
 	return result.Error
 }
+
+func GetAllBarangay() ([]models.Barangay, error) {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return nil, err
+	}
+
+	var barangay []models.Barangay
+	result := db.Find(&barangay)
+
+	return barangay, result.Error
+}
