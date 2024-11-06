@@ -21,3 +21,7 @@ func UpdateBarangayRoute(router *gin.Engine) {
 func GetAllBarangay(router *gin.Engine){
 	router.GET("/getAllBarangay", handlers.GetAllBarangay)
 }
+
+func GetSingleBarangay(router *gin.Engine){
+	router.GET("/getSingleBarangay", handlers.GetSingleBarangay)
+}

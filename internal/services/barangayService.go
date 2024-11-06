@@ -78,3 +78,22 @@ func GetAllBarangay(limit string, page string) ([]models.Barangay, error) {
 
 	return barangay, result.Error
 }
+
+func GetSingleBarangay(id string)(models.Barangay, error){
+	db, err := database.ConnectDB()
+	if err != nil {
+		return models.Barangay{}, err
+	}
+
+	barangay_ID, err := strconv.Atoi(id)
+	if err != nil {
+		return models.Barangay{}, err
+	}
+
+	var barangay models.Barangay
+	if err := db.Where("barangay_ID = ?", barangay_ID).First(&barangay); err != nil {
+		return models.Barangay{}, err.Error
+	}
+
+	return barangay, nil
+}

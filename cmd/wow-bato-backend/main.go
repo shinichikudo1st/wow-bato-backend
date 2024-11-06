@@ -40,6 +40,7 @@ func main() {
 	routes.DeleteBarangayRoute(router)
 	routes.UpdateBarangayRoute(router)
 	routes.GetAllBarangay(router)
+	routes.GetSingleBarangay(router)
 
 	router.Run(":8080")
 
