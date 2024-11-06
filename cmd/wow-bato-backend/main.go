@@ -31,16 +31,21 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	// User Routes
 	routes.RegisterUserRoute(router)
 	routes.LoginUserRoute(router)
 	routes.LogoutUserRoute(router)
 	routes.CheckAuthRoute(router)
 
+	// Barangay Routes
 	routes.AddBarangayRoute(router)
 	routes.DeleteBarangayRoute(router)
 	routes.UpdateBarangayRoute(router)
 	routes.GetAllBarangay(router)
 	routes.GetSingleBarangay(router)
+
+	// Budget Category Routes
+	routes.AddBudgetCategoryRoute(router)
 
 	router.Run(":8080")
 
