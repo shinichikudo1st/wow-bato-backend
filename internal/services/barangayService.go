@@ -23,15 +23,19 @@ func AddNewBarangay(newBarangay models.AddBarangay) error {
 	return result.Error
 }
 
-func DeleteBarangay(barangayToDelete models.DeleteBarangay) error {
+func DeleteBarangay(barangay_ID string) error {
 	db, err := database.ConnectDB()
+	if err != nil {
+		return err
+	}
 
+	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
 		return err
 	}
 
 	var barangay models.Barangay
-	result := db.Where("id = ?", barangayToDelete.Barangay_ID).Delete(&barangay)
+	result := db.Where("id = ?", barangay_ID_int).Delete(&barangay)
 
 	return result.Error
 }

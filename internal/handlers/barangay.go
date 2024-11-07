@@ -64,7 +64,7 @@ func GetSingleBarangay(c *gin.Context){
 		return
 	}
 
-	barangay_ID := c.Query("id")
+	barangay_ID := c.Param("barangay_ID")
 
 	barangay, err := services.GetSingleBarangay(barangay_ID)
 
@@ -83,14 +83,9 @@ func DeleteBarangay(c *gin.Context) {
 		return
 	}
 
-	var barangayToDelete models.DeleteBarangay
+	barangay_ID := c.Param("barangay_ID")
 
-	if err := c.ShouldBindJSON(&barangayToDelete); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	err := services.DeleteBarangay(barangayToDelete)
+	err := services.DeleteBarangay(barangay_ID)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

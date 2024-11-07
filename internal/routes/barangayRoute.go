@@ -11,7 +11,7 @@ func AddBarangayRoute(router *gin.Engine) {
 }
 
 func DeleteBarangayRoute(router *gin.Engine) {
-	router.DELETE("/deleteBarangay", handlers.DeleteBarangay)
+	router.DELETE("/deleteBarangay/:barangay_ID", handlers.DeleteBarangay)
 }
 
 func UpdateBarangayRoute(router *gin.Engine) {
@@ -23,5 +23,5 @@ func GetAllBarangay(router *gin.Engine){
 }
 
 func GetSingleBarangay(router *gin.Engine){
-	router.GET("/getSingleBarangay", handlers.GetSingleBarangay)
+	router.GET("/getSingleBarangay/:barangay_ID", handlers.GetSingleBarangay)
 }
