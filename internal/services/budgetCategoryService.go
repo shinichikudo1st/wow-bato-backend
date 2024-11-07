@@ -21,3 +21,14 @@ func AddBudgetCategory(budgetCategory models.NewBudgetCategory) error {
 
 	return result.Error
 }
+
+func DeleteBudgetCategory(budgetID string) error {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return err
+	}
+
+	result := db.Where("id = ?", budgetID).Delete(&models.Budget_Category{})
+
+	return result.Error
+}

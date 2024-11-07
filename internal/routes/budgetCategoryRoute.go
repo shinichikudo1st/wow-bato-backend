@@ -9,3 +9,7 @@ import (
 func AddBudgetCategoryRoute(router *gin.Engine) {
 	router.POST("/addBudgetCategory", handlers.AddBudgetCategory)
 }
+
+func DeleteBudgetCategoryRoute(router *gin.Engine) {
+	router.DELETE("/deleteBudgetCategory/:budgetID", handlers.DeleteBudgetCategory)
+}

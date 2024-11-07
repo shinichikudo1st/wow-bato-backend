@@ -31,7 +31,7 @@ func DeleteBarangay(barangayToDelete models.DeleteBarangay) error {
 	}
 
 	var barangay models.Barangay
-	result := db.Where("Barangay_ID = ?", barangayToDelete.Barangay_ID).Delete(&barangay)
+	result := db.Where("id = ?", barangayToDelete.Barangay_ID).Delete(&barangay)
 
 	return result.Error
 }
@@ -44,7 +44,7 @@ func UpdateBarangay(barangayToUpdate models.UpdateBarangay) error {
 
 	var barangay models.Barangay
 
-	if err := db.Where("Barangay_ID = ?", barangayToUpdate.Barangay_ID).First(&barangay).Error; err != nil {
+	if err := db.Where("id = ?", barangayToUpdate.Barangay_ID).First(&barangay).Error; err != nil {
 		return err
 	}
 
@@ -91,7 +91,7 @@ func GetSingleBarangay(id string)(models.Barangay, error){
 	}
 
 	var barangay models.Barangay
-	if err := db.Where("barangay_ID = ?", barangay_ID).First(&barangay); err != nil {
+	if err := db.Where("id = ?", barangay_ID).First(&barangay); err != nil {
 		return models.Barangay{}, err.Error
 	}
 

@@ -46,6 +46,7 @@ func main() {
 
 	// Budget Category Routes
 	routes.AddBudgetCategoryRoute(router)
+	routes.DeleteBudgetCategoryRoute(router)
 
 	router.Run(":8080")
 
