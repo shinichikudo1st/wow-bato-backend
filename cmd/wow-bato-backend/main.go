@@ -31,22 +31,21 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// User Routes
-	routes.RegisterUserRoute(router)
-	routes.LoginUserRoute(router)
-	routes.LogoutUserRoute(router)
-	routes.CheckAuthRoute(router)
+	
+	v1 := router.Group("/api/v1")
 
-	// Barangay Routes
-	routes.AddBarangayRoute(router)
-	routes.DeleteBarangayRoute(router)
-	routes.UpdateBarangayRoute(router)
-	routes.GetAllBarangay(router)
-	routes.GetSingleBarangay(router)
 
-	// Budget Category Routes
-	routes.AddBudgetCategoryRoute(router)
-	routes.DeleteBudgetCategoryRoute(router)
+	// User Routes API Version 1
+	routes.RegisterUserRoute(v1)
+
+	// Barangay Routes API Version 1
+	routes.RegisterBarangayRoute(v1)
+
+	// Budget Category Routes API Version 1
+	routes.RegisterBudgetCategoryRoutes(v1)
+	
+
+	
 
 	router.Run(":8080")
 

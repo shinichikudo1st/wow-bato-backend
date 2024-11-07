@@ -6,22 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AddBarangayRoute(router *gin.Engine) {
-	router.POST("/addBarangay", handlers.AddBarangay)
-}
-
-func DeleteBarangayRoute(router *gin.Engine) {
-	router.DELETE("/deleteBarangay/:barangay_ID", handlers.DeleteBarangay)
-}
-
-func UpdateBarangayRoute(router *gin.Engine) {
-	router.PUT("/updateBarangay/:barangay_ID", handlers.UpdateBarangay)
-}
-
-func GetAllBarangay(router *gin.Engine){
-	router.GET("/getAllBarangay", handlers.GetAllBarangay)
-}
-
-func GetSingleBarangay(router *gin.Engine){
-	router.GET("/getSingleBarangay/:barangay_ID", handlers.GetSingleBarangay)
+func RegisterBarangayRoute(router *gin.RouterGroup){
+	barangay := router.Group("/barangay")
+	{
+		barangay.POST("/add", handlers.AddBarangay)
+		barangay.DELETE("/delete/:barangay_ID", handlers.DeleteBarangay)
+		barangay.PUT("/update/:barangay_ID", handlers.UpdateBarangay)
+		barangay.GET("/all", handlers.GetAllBarangay)
+		barangay.GET("/single/:barangay_ID", handlers.GetSingleBarangay)
+	}
 }

@@ -6,18 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterUserRoute(router *gin.Engine){
-	router.POST("/registerUser", handlers.RegisterUser)
-}
-
-func LoginUserRoute(router *gin.Engine){
-	router.POST("/loginUser", handlers.LoginUser)
-}
-
-func LogoutUserRoute(router *gin.Engine){
-	router.POST("/logoutUser", handlers.LogoutUser)
-}
-
-func CheckAuthRoute(router *gin.Engine){
-	router.GET("/checkAuth", handlers.CheckAuth)
+func RegisterUserRoute(router *gin.RouterGroup){
+	user := router.Group("/user")
+	{
+		user.POST("/registerUser", handlers.RegisterUser)
+		user.POST("/loginUser", handlers.LoginUser)
+		user.POST("/logoutUser", handlers.LogoutUser)
+		user.GET("/checkAuth", handlers.CheckAuth)
+	}
 }

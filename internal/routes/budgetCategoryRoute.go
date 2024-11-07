@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AddBudgetCategoryRoute(router *gin.Engine) {
-	router.POST("/addBudgetCategory", handlers.AddBudgetCategory)
-}
-
-func DeleteBudgetCategoryRoute(router *gin.Engine) {
-	router.DELETE("/deleteBudgetCategory/:budgetID", handlers.DeleteBudgetCategory)
+func RegisterBudgetCategoryRoutes(router *gin.RouterGroup){
+	budgetCategory := router.Group("/budgetCategory")
+	{
+		budgetCategory.POST("/addBudgetCategory", handlers.AddBudgetCategory)
+		budgetCategory.DELETE("/deleteBudgetCategory/:budgetID", handlers.DeleteBudgetCategory)
+	}
 }
