@@ -42,9 +42,9 @@ func DeleteBudgetCategory(c *gin.Context){
 		return
 	}
 
-	budgetID := c.Param("budgetID")
+	budget_ID := c.Param("budget_ID")
 
-	err := services.DeleteBudgetCategory(budgetID)
+	err := services.DeleteBudgetCategory(budget_ID)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -52,4 +52,31 @@ func DeleteBudgetCategory(c *gin.Context){
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Deleted"})
+}
+
+func UpdateBudgetCategory(c *gin.Context){
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+		return
+	}
+
+	budget_ID := c.Param("budget_ID")
+
+	var newBudgetCategory models.NewBudgetCategory
+
+	if err := c.ShouldBindJSON(&newBudgetCategory); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := services.UpdateBudgetCategory(budget_ID, newBudgetCategory)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Updated"})
 }

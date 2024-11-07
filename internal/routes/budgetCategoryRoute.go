@@ -10,6 +10,7 @@ func RegisterBudgetCategoryRoutes(router *gin.RouterGroup){
 	budgetCategory := router.Group("/budgetCategory")
 	{
 		budgetCategory.POST("/add", handlers.AddBudgetCategory)
-		budgetCategory.DELETE("/delete/:budgetID", handlers.DeleteBudgetCategory)
+		budgetCategory.DELETE("/delete/:budget_ID", handlers.DeleteBudgetCategory)
+		budgetCategory.PUT("/update/:budget_ID", handlers.UpdateBudgetCategory)
 	}
 }
