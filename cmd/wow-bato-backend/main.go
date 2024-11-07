@@ -33,17 +33,16 @@ func main() {
 
 	
 	v1 := router.Group("/api/v1")
+	{
+		// User Routes API Version 1
+		routes.RegisterUserRoute(v1)
 
+		// Barangay Routes API Version 1
+		routes.RegisterBarangayRoute(v1)
 
-	// User Routes API Version 1
-	routes.RegisterUserRoute(v1)
-
-	// Barangay Routes API Version 1
-	routes.RegisterBarangayRoute(v1)
-
-	// Budget Category Routes API Version 1
-	routes.RegisterBudgetCategoryRoutes(v1)
-	
+		// Budget Category Routes API Version 1
+		routes.RegisterBudgetCategoryRoutes(v1)
+	}
 
 	
 

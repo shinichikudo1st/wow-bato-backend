@@ -9,9 +9,9 @@ import (
 func RegisterUserRoute(router *gin.RouterGroup){
 	user := router.Group("/user")
 	{
-		user.POST("/registerUser", handlers.RegisterUser)
-		user.POST("/loginUser", handlers.LoginUser)
-		user.POST("/logoutUser", handlers.LogoutUser)
+		user.POST("/register", handlers.RegisterUser)
+		user.POST("/login", handlers.LoginUser)
+		user.POST("/logout", handlers.LogoutUser)
 		user.GET("/checkAuth", handlers.CheckAuth)
 	}
 }
