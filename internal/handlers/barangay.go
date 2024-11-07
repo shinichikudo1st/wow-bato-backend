@@ -103,14 +103,18 @@ func UpdateBarangay(c *gin.Context) {
 		return
 	}
 
-	var updateBarangay models.UpdateBarangay
+	barangay_ID := c.Param("barangay_ID")
 
-	if err := c.ShouldBindJSON(&updateBarangay); err != nil {
+	var barangayUpdate models.UpdateBarangay
+
+	if err := c.ShouldBindJSON(&barangayUpdate); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := services.UpdateBarangay(updateBarangay); err != nil {
+	err := services.UpdateBarangay(barangay_ID, barangayUpdate)
+
+	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

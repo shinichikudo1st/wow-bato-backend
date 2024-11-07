@@ -11,8 +11,7 @@ type DeleteBarangay struct {
 }
 
 type UpdateBarangay struct {
-	Barangay_ID uint   `json:"barangay_ID"`
-	Name        string `json:"name"`
-	City        string `json:"city"`
-	Region      string `json:"region"`
+	Name   string `json:"name"`
+	City   string `json:"city"`
+	Region string `json:"region"`
 }
