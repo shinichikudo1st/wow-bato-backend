@@ -80,3 +80,26 @@ func UpdateBudgetCategory(c *gin.Context){
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Updated"})
 }
+
+func GetAllBudgetCategory(c *gin.Context){
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+		return
+	}
+
+	limit := c.Param("limit")
+	page := c.Param("page")
+
+	barangay_ID := session.Get("barangay_ID")
+
+	budgetCategories, err := services.GetAllBudgetCategory(barangay_ID.(string), limit, page)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Retrieved", "data": budgetCategories})
+}

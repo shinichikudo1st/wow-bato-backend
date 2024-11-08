@@ -58,3 +58,31 @@ func UpdateBudgetCategory(budget_ID string, newBudgetCategory models.NewBudgetCa
 	return result.Error
 
 }
+
+func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]models.Budget_Category, error) {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return []models.Budget_Category{}, err
+	}
+
+	barangay_ID_int, err := strconv.Atoi(barangay_ID)
+	if err != nil {
+		return []models.Budget_Category{}, err
+	}
+
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		return []models.Budget_Category{}, err
+	}
+
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		return []models.Budget_Category{}, err
+	}
+
+	var budgetCategory []models.Budget_Category
+	result := db.Where("barangay_ID", barangay_ID_int).Limit(limitInt).Offset(pageInt).Find(&budgetCategory)
+
+
+	return budgetCategory, result.Error 
+}
