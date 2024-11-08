@@ -86,3 +86,26 @@ func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]mode
 
 	return budgetCategory, result.Error 
 }
+
+func GetBudgetCategory(barangay_ID string, budget_ID string)(models.Budget_Category, error){
+	db, err := database.ConnectDB()
+	if err != nil {
+		return models.Budget_Category{}, err
+	}
+
+	barangay_ID_int, err := strconv.Atoi(barangay_ID)
+	if err != nil {
+		return models.Budget_Category{}, err
+	}
+
+	budget_ID_int, err := strconv.Atoi(budget_ID)
+	if err != nil {
+		return models.Budget_Category{}, err
+	}
+
+	var budgetCategory models.Budget_Category
+	result := db.Where("barangay_ID = ? AND id = ?", barangay_ID_int, budget_ID_int).First(&budgetCategory)
+	
+
+	return budgetCategory, result.Error
+}
