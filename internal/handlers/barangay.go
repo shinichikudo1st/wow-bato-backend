@@ -46,7 +46,7 @@ func GetAllBarangay(c *gin.Context){
 	page := c.Query("page")
 	limit := c.Query("limit")
 
-	barangay, err := services.GetAllBarangay(page, limit)
+	barangay, err := services.GetAllBarangay(limit, page)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

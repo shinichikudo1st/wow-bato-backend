@@ -81,11 +81,15 @@ func GetAllBarangay(limit string, page string) ([]models.Barangay, error) {
 	if err != nil {
 		return nil, err
 	}
+	
+	offset := (pageInt - 1) * limitInt
 
 	var barangay []models.Barangay
-	result := db.Limit(limitInt).Offset(pageInt).Find(&barangay)
+	if err := db.Limit(limitInt).Offset(offset).Find(&barangay).Error; err != nil {
+		return nil, err
+	}
 
-	return barangay, result.Error
+	return barangay, nil
 }
 
 func GetSingleBarangay(id string)(models.Barangay, error){
