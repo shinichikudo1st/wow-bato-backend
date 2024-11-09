@@ -34,7 +34,7 @@ func DeleteBudgetCategory(budget_ID string) error {
 	return result.Error
 }
 
-func UpdateBudgetCategory(budget_ID string, newBudgetCategory models.NewBudgetCategory) error {
+func UpdateBudgetCategory(budget_ID string, updateBudgetCategory models.UpdateBudgetCategory) error {
 	db, err := database.ConnectDB()
 	if err != nil {
 		return err
@@ -50,8 +50,8 @@ func UpdateBudgetCategory(budget_ID string, newBudgetCategory models.NewBudgetCa
 		return err
 	}
 
-	budgetCategory.Name = newBudgetCategory.Name
-	budgetCategory.Description = newBudgetCategory.Description
+	budgetCategory.Name = updateBudgetCategory.Name
+	budgetCategory.Description = updateBudgetCategory.Description
 
 	result := db.Save(&budgetCategory)
 

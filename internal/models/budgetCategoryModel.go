@@ -5,3 +5,8 @@ type NewBudgetCategory struct {
 	Description string `json:"description"`
 	Barangay_ID uint   `json:"barangay_ID"`
 }
+
+type UpdateBudgetCategory struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}

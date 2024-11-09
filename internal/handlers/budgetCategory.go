@@ -64,14 +64,14 @@ func UpdateBudgetCategory(c *gin.Context){
 
 	budget_ID := c.Param("budget_ID")
 
-	var newBudgetCategory models.NewBudgetCategory
+	var updateBudgetCategory models.UpdateBudgetCategory
 
-	if err := c.ShouldBindJSON(&newBudgetCategory); err != nil {
+	if err := c.ShouldBindJSON(&updateBudgetCategory); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := services.UpdateBudgetCategory(budget_ID, newBudgetCategory)
+	err := services.UpdateBudgetCategory(budget_ID, updateBudgetCategory)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
