@@ -104,8 +104,8 @@ func GetSingleBarangay(id string)(models.Barangay, error){
 	}
 
 	var barangay models.Barangay
-	if err := db.Where("id = ?", barangay_ID).First(&barangay); err != nil {
-		return models.Barangay{}, err.Error
+	if err := db.Where("ID = ?", barangay_ID).First(&barangay).Error; err != nil {
+		return models.Barangay{}, err
 	}
 
 	return barangay, nil
