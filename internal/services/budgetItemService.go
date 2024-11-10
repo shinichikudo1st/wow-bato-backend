@@ -31,7 +31,7 @@ func AddBudgetItem(categoryID string, budgetItem models.NewBudgetItem) error {
 	return result.Error
 }
 
-func GetAllBudgetItem(categoryID string, status string) ([]models.Budget_Item, error){
+func GetAllBudgetItem(categoryID string, filter string) ([]models.Budget_Item, error){
 	db, err := database.ConnectDB()
 	if err != nil {
 		return []models.Budget_Item{}, err
@@ -43,8 +43,32 @@ func GetAllBudgetItem(categoryID string, status string) ([]models.Budget_Item, e
 	}
 
 	var budgetItem []models.Budget_Item
-	if err := db.Where("categoryID = ? AND status = ?", categoryID_int, status).Find(&budgetItem).Error; err != nil {
+	if err := db.Where("categoryID = ? AND status = ?", categoryID_int, filter).Find(&budgetItem).Error; err != nil {
 		return []models.Budget_Item{}, err
+	}
+
+	return budgetItem, nil
+}
+
+func GetSingleBudgetItem(categoryID string, budgetItemID string)(models.Budget_Item, error){
+	db, err := database.ConnectDB()
+	if err != nil {
+		return models.Budget_Item{}, err
+	}
+
+	categoryID_int, err := strconv.Atoi(categoryID)
+	if err != nil {
+		return models.Budget_Item{}, err
+	}
+
+	budgetItemID_int, err := strconv.Atoi(budgetItemID)
+	if err != nil {
+		return models.Budget_Item{}, err
+	}
+
+	var budgetItem models.Budget_Item
+	if err := db.Where("categoryID = ? AND status = ?", categoryID_int, budgetItemID_int).First(&budgetItem).Error; err != nil {
+		return models.Budget_Item{}, err
 	}
 
 	return budgetItem, nil

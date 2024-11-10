@@ -43,9 +43,30 @@ func GetAllBudgetItem(c *gin.Context){
 	}
 
 	categoryID := c.Param("categoryID")
-	status := c.Param("status")
+	filter := c.Query("filter")
 
-	budgetItem, err := services.GetAllBudgetItem(categoryID, status)
+	budgetItem, err := services.GetAllBudgetItem(categoryID, filter)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItem})
+}
+
+func GetSingleBudgetItem(c *gin.Context){
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+		return
+	}
+
+	categoryID := c.Param("categoryID")
+	budgetItemID := c.Param("budgetItemID")
+
+	budgetItem, err := services.GetSingleBudgetItem(categoryID, budgetItemID)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
