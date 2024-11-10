@@ -30,3 +30,22 @@ func AddBudgetItem(categoryID string, budgetItem models.NewBudgetItem) error {
 
 	return result.Error
 }
+
+func GetAllBudgetItem(categoryID string) ([]models.Budget_Item, error){
+	db, err := database.ConnectDB()
+	if err != nil {
+		return []models.Budget_Item{}, err
+	}
+
+	categoryID_int, err := strconv.Atoi(categoryID)
+	if err != nil {
+		return []models.Budget_Item{}, err
+	}
+
+	var budgetItem []models.Budget_Item
+	if err := db.Where("categoryID = ?", categoryID_int).Find(&budgetItem).Error; err != nil {
+		return []models.Budget_Item{}, err
+	}
+
+	return budgetItem, nil
+}
