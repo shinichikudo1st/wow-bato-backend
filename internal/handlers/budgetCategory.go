@@ -89,12 +89,11 @@ func GetAllBudgetCategory(c *gin.Context){
 		return
 	}
 
-	limit := c.Param("limit")
-	page := c.Param("page")
+	limit := c.Query("limit")
+	page := c.Query("page")
+	barangay_ID := c.Param("barangay_ID")
 
-	barangay_ID := session.Get("barangay_ID")
-
-	budgetCategories, err := services.GetAllBudgetCategory(barangay_ID.(string), limit, page)
+	budgetCategories, err := services.GetAllBudgetCategory(barangay_ID, limit, page)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

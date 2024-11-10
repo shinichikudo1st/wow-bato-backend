@@ -80,8 +80,10 @@ func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]mode
 		return []models.Budget_Category{}, err
 	}
 
+	offset := (pageInt - 1) * limitInt
+
 	var budgetCategory []models.Budget_Category
-	result := db.Where("barangay_ID", barangay_ID_int).Limit(limitInt).Offset(pageInt).Find(&budgetCategory)
+	result := db.Preload("Barangay").Where("barangay_ID = ?", barangay_ID_int).Limit(limitInt).Offset(offset).Find(&budgetCategory)
 
 
 	return budgetCategory, result.Error 
