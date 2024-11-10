@@ -42,6 +42,9 @@ func main() {
 
 		// Budget Category Routes API Version 1
 		routes.RegisterBudgetCategoryRoutes(v1)
+
+		// Budget Item Routes API Version 1
+		routes.RegisterBudgetItemRoutes(v1)
 	}
 
 	
