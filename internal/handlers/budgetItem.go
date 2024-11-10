@@ -43,8 +43,9 @@ func GetAllBudgetItem(c *gin.Context){
 	}
 
 	categoryID := c.Param("categoryID")
+	status := c.Param("status")
 
-	budgetItem, err := services.GetAllBudgetItem(categoryID)
+	budgetItem, err := services.GetAllBudgetItem(categoryID, status)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
