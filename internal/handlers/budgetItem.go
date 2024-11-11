@@ -75,3 +75,29 @@ func GetSingleBudgetItem(c *gin.Context){
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItem})
 }
+
+func UpdateStatusBudgetItem(c *gin.Context){
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+		return
+	}
+
+	budgetItemID := c.Param("budgetItemID")
+
+	var newStatus models.UpdateStatus
+	if err := c.ShouldBindJSON(&newStatus); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	err := services.UpdateBudgetItemStatus(budgetItemID, newStatus)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Item"})
+}

@@ -73,3 +73,26 @@ func GetSingleBudgetItem(categoryID string, budgetItemID string)(models.Budget_I
 
 	return budgetItem, nil
 }
+
+func UpdateBudgetItemStatus(budgetItemID string, newStatus models.UpdateStatus) error {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return err
+	}
+
+	budgetItemID_int, err := strconv.Atoi(budgetItemID)
+	if err != nil {
+		return err
+	}
+
+	var budgetItem models.Budget_Item
+	if err := db.Where("id = ?", budgetItemID_int).First(&budgetItem).Error; err != nil {
+		return err
+	}
+
+	budgetItem.Status = newStatus.Status
+
+	result := db.Save(&budgetItem)
+
+	return result.Error
+}

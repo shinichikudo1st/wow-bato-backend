@@ -7,3 +7,7 @@ type NewBudgetItem struct {
 	Description      string  `json:"description"`
 	Status           string  `json:"status"`
 }
+
+type UpdateStatus struct {
+	Status string `json:"status"`
+}
