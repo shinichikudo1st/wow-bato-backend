@@ -16,7 +16,7 @@ type User struct {
 	Contact  	string 	  `gorm:"not null"`
 	Barangay_ID uint 	  `gorm:"not null"`
 	Barangay 	Barangay  `gorm:"foreignKey:Barangay_ID"`
-	
+	Feedbacks	[]Feedback `gorm:"foreignKey:UserID"`
 }
 
 type Barangay struct {
@@ -37,7 +37,7 @@ type Budget_Category struct {
 	Barangay_ID 			uint   `gorm:"not null"`
 	Barangay 			Barangay `gorm:"foreignKey:Barangay_ID"`
 	Budget_Items 		[]Budget_Item `gorm:"foreignKey:CategoryID"`
-
+	Projects 			[]Project `gorm:"foreignKey:CategoryID"`
 }
 
 type Budget_Item struct {
@@ -50,16 +50,9 @@ type Budget_Item struct {
 	Approval_Date 		*time.Time //Nullable, set when approved
 	CategoryID 			uint `gorm:"not null"`
 	Category 			Budget_Category `gorm:"foreignKey:CategoryID"`
-	Projects 			[]Project `gorm:"many2many:project_budget_items"`
+	ProjectID 			uint `gorm:"not null"`
+	Project 			Project `gorm:"foreignKey:ProjectID"`
 
-}
-
-type Join_Project_Budget_Item struct {
-	gorm.Model
-	ProjectID uint `gorm:"primaryKey"`
-	BudgetItemID uint `gorm:"primaryKey"`
-	Project Project `gorm:"foreignKey:ProjectID"`
-	BudgetItem Budget_Item `gorm:"foreignKey:BudgetItemID"`
 }
 
 type Project struct {
@@ -71,7 +64,9 @@ type Project struct {
 	Status string `gorm:"not null"` //planned, ongoing, completed
 	Barangay_ID uint `gorm:"not null"`
 	Barangay Barangay `gorm:"foreignKey:Barangay_ID"`
-	Budget_Items []Budget_Item `gorm:"many2many:project_budget_items"`
+	CategoryID uint `gorm:"not null"`
+	Category Budget_Category `gorm:"foreignKey:CategoryID"`
+	Budget_Items []Budget_Item `gorm:"foreignKey:ProjectID"`
 }
 
 type Feedback struct {
