@@ -60,7 +60,7 @@ type Project struct {
 	Name string `gorm:"not null"`
 	Description string `gorm:"type:text"`
 	StartDate time.Time `gorm:"not null"`
-	EndDate time.Time `gorm:"not null"`
+	EndDate *time.Time `gorm:"not null"`
 	Status string `gorm:"not null"` //planned, ongoing, completed
 	Barangay_ID uint `gorm:"not null"`
 	Barangay Barangay `gorm:"foreignKey:Barangay_ID"`
