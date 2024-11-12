@@ -10,8 +10,8 @@ func RegisterBudgetItemRoutes(router *gin.RouterGroup){
 	budgetItem := router.Group("/budgetItem")
 	{
 		budgetItem.POST("/add/:categoryID", handlers.AddNewBudgetItem)
-		budgetItem.GET("/all/:categoryID", handlers.GetAllBudgetItem)
-		budgetItem.GET("/:categoryID/:budgetItemID", handlers.GetSingleBudgetItem)
+		budgetItem.GET("/all/:projectID", handlers.GetAllBudgetItem)
+		budgetItem.GET("/:projectID/:budgetItemID", handlers.GetSingleBudgetItem)
 		budgetItem.PUT("/:budgetItemID")
 	}
 }

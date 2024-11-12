@@ -44,7 +44,6 @@ type Budget_Item struct {
 	gorm.Model
 	Name     			string `gorm:"not null"`
 	Amount_Allocated 	float64 `gorm:"not null"`
-	Amount_Spent 		float64 `gorm:"not null"`
 	Description 		string `gorm:"type:text"`
 	Status 				string `gorm:"not null"` //pending, approved, rejected
 	Approval_Date 		*time.Time //Nullable, set when approved

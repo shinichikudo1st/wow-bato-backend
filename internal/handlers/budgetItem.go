@@ -42,10 +42,10 @@ func GetAllBudgetItem(c *gin.Context){
 		return
 	}
 
-	categoryID := c.Param("categoryID")
+	projectID := c.Param("projectID")
 	filter := c.Query("filter")
 
-	budgetItem, err := services.GetAllBudgetItem(categoryID, filter)
+	budgetItem, err := services.GetAllBudgetItem(projectID, filter)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -63,10 +63,10 @@ func GetSingleBudgetItem(c *gin.Context){
 		return
 	}
 
-	categoryID := c.Param("categoryID")
+	projectID := c.Param("projectID")
 	budgetItemID := c.Param("budgetItemID")
 
-	budgetItem, err := services.GetSingleBudgetItem(categoryID, budgetItemID)
+	budgetItem, err := services.GetSingleBudgetItem(projectID, budgetItemID)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

@@ -20,7 +20,6 @@ func AddBudgetItem(categoryID string, budgetItem models.NewBudgetItem) error {
 	newBudgetItem := models.Budget_Item{
 		Name: budgetItem.Name,
 		Amount_Allocated: budgetItem.Amount_Allocated,
-		Amount_Spent: budgetItem.Amount_Spent,
 		Description: budgetItem.Description,
 		Status: budgetItem.Status,
 		CategoryID: uint(categoryID_int),
@@ -31,19 +30,19 @@ func AddBudgetItem(categoryID string, budgetItem models.NewBudgetItem) error {
 	return result.Error
 }
 
-func GetAllBudgetItem(categoryID string, filter string) ([]models.Budget_Item, error){
+func GetAllBudgetItem(projectID string, filter string) ([]models.Budget_Item, error){
 	db, err := database.ConnectDB()
 	if err != nil {
 		return []models.Budget_Item{}, err
 	}
 
-	categoryID_int, err := strconv.Atoi(categoryID)
+	projectID_int, err := strconv.Atoi(projectID)
 	if err != nil {
 		return []models.Budget_Item{}, err
 	}
 
 	var budgetItem []models.Budget_Item
-	if err := db.Where("categoryID = ? AND status = ?", categoryID_int, filter).Find(&budgetItem).Error; err != nil {
+	if err := db.Where("ProjectID = ? AND status = ?", projectID_int, filter).Find(&budgetItem).Error; err != nil {
 		return []models.Budget_Item{}, err
 	}
 
