@@ -46,3 +46,15 @@ func DeleteProject(barangay_ID uint, projectID string) error {
 
 	return result.Error
 }
+
+func GetAllProjects(barangay_ID uint) ([]models.Project, error) {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return nil, err
+	}
+
+	var projects []models.Project
+	result := db.Where("barangay_id = ?", barangay_ID).Find(&projects)
+
+	return projects, result.Error
+}
