@@ -40,20 +40,6 @@ type Budget_Category struct {
 	Projects 			[]Project `gorm:"foreignKey:CategoryID"`
 }
 
-type Budget_Item struct {
-	gorm.Model
-	Name     			string `gorm:"not null"`
-	Amount_Allocated 	float64 `gorm:"not null"`
-	Description 		string `gorm:"type:text"`
-	Status 				string `gorm:"not null"` //pending, approved, rejected
-	Approval_Date 		*time.Time //Nullable, set when approved
-	CategoryID 			uint `gorm:"not null"`
-	Category 			Budget_Category `gorm:"foreignKey:CategoryID"`
-	ProjectID 			uint `gorm:"not null"`
-	Project 			Project `gorm:"foreignKey:ProjectID"`
-
-}
-
 type Project struct {
 	gorm.Model
 	Name string `gorm:"not null"`
@@ -67,6 +53,21 @@ type Project struct {
 	Category Budget_Category `gorm:"foreignKey:CategoryID"`
 	Budget_Items []Budget_Item `gorm:"foreignKey:ProjectID"`
 }
+
+type Budget_Item struct {
+	gorm.Model
+	Name     			string `gorm:"not null"`
+	Amount_Allocated 	float64 `gorm:"not null"`
+	Description 		string `gorm:"type:text"`
+	Status 				string `gorm:"not null"` //pending, approved, rejected
+	Approval_Date 		*time.Time //Nullable, set when approved
+	CategoryID 			uint `gorm:"not null"`
+	Category 			Budget_Category `gorm:"foreignKey:CategoryID"`
+	ProjectID 			uint `gorm:"not null"`
+	Project 			Project `gorm:"foreignKey:ProjectID"`
+}
+
+
 
 type Feedback struct {
 	gorm.Model

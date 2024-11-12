@@ -30,3 +30,19 @@ func AddNewProject(barangay_ID uint, categoryID string, newProject models.NewPro
 
 	return result.Error
 }
+
+func DeleteProject(barangay_ID uint, projectID string) error {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return err
+	}
+
+	projectID_int, err := strconv.Atoi(projectID)
+	if err != nil {
+		return err
+	}
+
+	result := db.Delete(&models.Project{}, projectID_int)
+
+	return result.Error
+}

@@ -35,3 +35,23 @@ func AddNewProject(c *gin.Context){
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Project Created"})
 }
+
+func DeleteProject(c *gin.Context){
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+		return
+	}
+
+	projectID := c.Param("projectID")
+	barangay_ID := session.Get("barangay_ID").(uint)
+
+	err := services.DeleteProject(barangay_ID, projectID)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Project Deleted"})
+}
