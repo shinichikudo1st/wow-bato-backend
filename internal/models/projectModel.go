@@ -8,3 +8,8 @@ type NewProject struct {
 	StartDate   time.Time `json:"startDate"`
 	Status string `json:"status"`
 }
+
+type NewProjectStatus struct {
+    Status string `json:"status"`
+    FlexDate time.Time `json:"flexdate"`
+}

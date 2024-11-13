@@ -74,3 +74,26 @@ func GetAllProjects(c *gin.Context){
 
 	c.IndentedJSON(http.StatusOK, gin.H{"projects": projects})
 }
+
+func UpdateProjectStatus(c *gin.Context){
+    session := sessions.Default(c)
+    if session.Get("authenticated") != true {
+        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+        return 
+    }
+
+    projectID := c.Param("projectID")
+    barangay_ID := session.Get("barangay_ID").(uint)
+
+    var newStatus models.NewProjectStatus
+    if err := c.ShouldBindJSON(&newStatus); err != nil {
+        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    err := services.UpdateProjectStatus(projectID, barangay_ID, newStatus)
+    if err != nil {
+        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+}

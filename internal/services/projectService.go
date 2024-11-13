@@ -58,3 +58,37 @@ func GetAllProjects(barangay_ID uint) ([]models.Project, error) {
 
 	return projects, result.Error
 }
+
+func UpdateProjectStatus(projectID string, barangay_ID uint, newStatus models.NewProjectStatus) error {
+    db, err := database.ConnectDB()
+    if err != nil {
+        return err
+    }
+
+    projectID_int, err := strconv.Atoi(projectID)
+    if err != nil {
+        return err
+    }
+
+    var project models.Project
+    if err := db.Where("Barangay_ID = ? AND id = ?", barangay_ID, projectID_int).First(&project).Error; err != nil {
+            return err
+        }
+
+    if newStatus.Status == "ongoing" {
+
+        project.Status = newStatus.Status
+        project.StartDate = newStatus.FlexDate
+
+        result := db.Save(&project)
+        return result.Error
+
+    } else {
+        project.Status = newStatus.Status
+        project.EndDate = &newStatus.FlexDate
+
+        result := db.Save(&project)
+        return result.Error
+
+    }
+}
