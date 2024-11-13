@@ -9,6 +9,11 @@ type NewProject struct {
 	Status string `json:"status"`
 }
 
+type UpdateProject struct {
+    Name string `json:"name"`
+    Description string `json:"description"`
+}
+
 type NewProjectStatus struct {
     Status string `json:"status"`
     FlexDate time.Time `json:"flexdate"`

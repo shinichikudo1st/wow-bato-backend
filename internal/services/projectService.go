@@ -47,6 +47,30 @@ func DeleteProject(barangay_ID uint, projectID string) error {
 	return result.Error
 }
 
+func UpdateProject(barangay_ID uint, projectID string, updateProject models.UpdateProject) error {
+    db, err := database.ConnectDB()
+    if err != nil {
+        return err
+    }
+
+    projectID_int, err := strconv.Atoi(projectID)
+    if err != nil {
+        return err
+    }
+
+    var project models.Project
+    if err := db.Where("Barangay_ID = ? AND id = ?", barangay_ID, projectID_int).Error; err != nil {
+        return err
+    }
+
+    project.Name = updateProject.Name
+    project.Description = updateProject.Description
+
+    result := db.Save(&project)
+
+    return result.Error
+}
+
 func GetAllProjects(barangay_ID uint) ([]models.Project, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
