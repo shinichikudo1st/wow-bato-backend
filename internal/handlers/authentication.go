@@ -74,11 +74,11 @@ func LogoutUser(c *gin.Context){
 func CheckAuth(c *gin.Context){
 	session := sessions.Default(c)
 
-	if session.Get("authenticated") == nil {
+	if session.Get("authenticated") != true {
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated")})
+	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated"), "role": session.Get("user_role"), "user_id": session.Get("user_id")})
 }
 
