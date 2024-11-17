@@ -15,3 +15,10 @@ type UpdateBarangay struct {
 	City   string `json:"city"`
 	Region string `json:"region"`
 }
+
+type AllBarangayResponse struct {
+	ID     uint   `json:"id"`
+	Name   string `json:"name"`
+	City   string `json:"city"`
+	Region string `json:"region"`
+}

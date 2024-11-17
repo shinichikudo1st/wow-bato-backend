@@ -66,7 +66,7 @@ func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) er
 	return result.Error
 }
 
-func GetAllBarangay(limit string, page string) ([]models.Barangay, error) {
+func GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
 		return nil, err
@@ -84,8 +84,8 @@ func GetAllBarangay(limit string, page string) ([]models.Barangay, error) {
 	
 	offset := (pageInt - 1) * limitInt
 
-	var barangay []models.Barangay
-	if err := db.Limit(limitInt).Offset(offset).Find(&barangay).Error; err != nil {
+	var barangay []models.AllBarangayResponse
+	if err := db.Model(&models.Barangay{}).Select("id, name, city, region").Limit(limitInt).Offset(offset).Find(&barangay).Error; err != nil {
 		return nil, err
 	}
 
