@@ -24,6 +24,7 @@ type Barangay struct {
 	Name     			string `gorm:"not null;unique"`
 	City     			string `gorm:"not null"`
 	Region   			string `gorm:"not null"`
+    ImageURL            string `gorm:""`
 	Users    			[]User `gorm:"foreignKey:Barangay_ID"`
 	Projects 			[]Project `gorm:"foreignKey:Barangay_ID"`
 	Budget_Categories 	[]Budget_Category `gorm:"foreignKey:Barangay_ID"`
