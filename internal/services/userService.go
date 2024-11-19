@@ -30,32 +30,23 @@ func RegisterUser(registerUser models.RegisterUser) error {
 	return result.Error
 }
 
-func LoginUser(loginUser models.LoginUser) (models.UserResponse, error){
+func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
-		return models.UserResponse{}, err
+		return models.UserStruct{}, err
 	}
 
 	var user models.UserStruct
-	result := db.Model(&models.User{}).
-        Select("id, email, password, first_name, last_name, role, contact").
-        Where("email = ?", loginUser.Email).
-        First(&user)
-
-    if result.Error != nil {
-        return models.UserResponse{}, errors.New("invalid email or password")
-    }
-
-	if !CheckPassword(user.Password, loginUser.Password) {
-		return models.UserResponse{}, errors.New("invalid password")
+	if err := db.Model(&models.User{}).
+		Select("id, password, role").
+		Where("email = ?", loginUser.Email).
+		Scan(&user).Error; err != nil {
+		return models.UserStruct{}, errors.New("invalid email or password")
 	}
 
-	return models.UserResponse{
-		ID: user.ID,
-		Email: user.Email,
-		FirstName: user.FirstName,
-		LastName: user.LastName,
-		Role: user.Role,
-		Contact: user.Contact,
-	}, nil
+	if !CheckPassword(user.Password, loginUser.Password) {
+		return models.UserStruct{}, errors.New("invalid email or password")
+	}
+
+	return user, nil
 }

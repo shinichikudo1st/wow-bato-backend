@@ -52,7 +52,7 @@ func LoginUser(c *gin.Context){
 	}
 	
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "user": user, "sessionStatus": session.Get("authenticated")})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "sessionStatus": session.Get("authenticated")})
 }
 
 func LogoutUser(c *gin.Context){
