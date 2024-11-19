@@ -14,7 +14,7 @@ type User struct {
 	LastName 	string 	  `gorm:"not null"`
 	Role     	string 	  `gorm:"not null"`
 	Contact  	string 	  `gorm:"not null"`
-	Barangay_ID uint 	  `gorm:""`
+	Barangay_ID *uint 	  `gorm:"default:null"`
 	Barangay 	Barangay  `gorm:"foreignKey:Barangay_ID"`
 	Feedbacks	[]Feedback `gorm:"foreignKey:UserID"`
 }
