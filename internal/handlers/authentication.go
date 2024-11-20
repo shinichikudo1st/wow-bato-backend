@@ -80,3 +80,23 @@ func CheckAuth(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated"), "role": session.Get("user_role"), "user_id": session.Get("user_id")})
 }
 
+func GetUserProfile(c *gin.Context){
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+		return
+	}
+
+	userID := session.Get("user_id")
+
+	userProfile, err := services.GetUserProfile(userID.(uint))
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "User profile fetched successfully", "data": userProfile})
+}
+

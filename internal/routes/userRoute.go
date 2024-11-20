@@ -13,5 +13,6 @@ func RegisterUserRoute(router *gin.RouterGroup){
 		user.POST("/login", handlers.LoginUser)
 		user.POST("/logout", handlers.LogoutUser)
 		user.GET("/checkAuth", handlers.CheckAuth)
+		user.GET("/profile", handlers.GetUserProfile)
 	}
 }

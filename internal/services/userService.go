@@ -50,3 +50,20 @@ func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 
 	return user, nil
 }
+
+func GetUserProfile(userID uint) (models.UserProfile, error) {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return models.UserProfile{}, err
+	}
+
+	var userProfile models.UserProfile
+	if err := db.Model(&models.User{}).
+		Select("id, email, first_name, last_name, role, contact").
+		Where("id = ?", userID).
+		Scan(&userProfile).Error; err != nil {
+		return models.UserProfile{}, err
+	}
+
+	return userProfile, nil
+}

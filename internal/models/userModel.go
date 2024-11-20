@@ -19,3 +19,12 @@ type UserStruct struct {
 	Password string
 	Role     string
 }
+
+type UserProfile struct {
+	ID        uint
+	Email     string
+	FirstName string
+	LastName  string
+	Role      string
+	Contact   string
+}
