@@ -14,5 +14,6 @@ func RegisterBarangayRoute(router *gin.RouterGroup){
 		barangay.PUT("/update/:barangay_ID", handlers.UpdateBarangay)
 		barangay.GET("/all", handlers.GetAllBarangay)
 		barangay.GET("/single/:barangay_ID", handlers.GetSingleBarangay)
+        barangay.GET("/options", handlers.GetBarangayOptions)
 	}
 }

@@ -22,3 +22,8 @@ type AllBarangayResponse struct {
 	City   string `json:"city"`
 	Region string `json:"region"`
 }
+
+type OptionBarangay struct {
+    ID      uint `json:"id"`
+    Name    string `json:"name"`
+}

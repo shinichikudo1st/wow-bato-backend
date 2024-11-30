@@ -122,3 +122,15 @@ func UpdateBarangay(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully Updated Barangay"})
 }
+
+func GetBarangayOptions(c *gin.Context){
+   
+    barangay, err := services.OptionBarangay()
+
+    if err != nil {
+        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.IndentedJSON(http.StatusOK, gin.H{"message": "Barangays found", "data": barangay})
+}

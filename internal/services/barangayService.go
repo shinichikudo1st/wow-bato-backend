@@ -92,6 +92,20 @@ func GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, er
 	return barangay, nil
 }
 
+func OptionBarangay()([]models.OptionBarangay, error){
+    db, err := database.ConnectDB()
+    if err != nil {
+        return []models.OptionBarangay{}, err
+    }
+
+    var barangay []models.OptionBarangay
+    if err := db.Model(&models.Barangay{}).Select("id, name").Scan(&barangay).Error; err != nil {
+        return nil, err
+    }
+
+    return barangay, nil
+}
+
 func GetSingleBarangay(id string)(models.AllBarangayResponse, error){
 	db, err := database.ConnectDB()
 	if err != nil {
