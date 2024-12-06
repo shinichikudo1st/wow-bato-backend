@@ -47,7 +47,7 @@ func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 
 	var user models.UserStruct
 	if err := db.Model(&models.User{}).
-		Select("id, password, role").
+		Select("id, password, role, barangay_id").
 		Where("email = ?", loginUser.Email).
 		Scan(&user).Error; err != nil {
 		return models.UserStruct{}, errors.New("invalid email or password")

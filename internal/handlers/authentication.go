@@ -43,6 +43,7 @@ func LoginUser(c *gin.Context){
 	session := sessions.Default(c)
 	session.Set("user_id", user.ID)
 	session.Set("user_role", user.Role)
+	session.Set("barangay_id", user.Barangay_ID)
 	session.Set("authenticated", true)
 	
 
