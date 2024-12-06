@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"strconv"
 	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
 )
@@ -16,6 +17,13 @@ func RegisterUser(registerUser models.RegisterUser) error {
 	if err != nil {
 		return err
 	}
+	
+	barangay_ID, err := strconv.Atoi(registerUser.Barangay_ID)
+	if err != nil {
+		return err
+	}
+
+	barangay_ID_uint := uint(barangay_ID)
 
 	user := models.User{
 		Email:    	registerUser.Email,
@@ -23,6 +31,7 @@ func RegisterUser(registerUser models.RegisterUser) error {
 		FirstName: 	registerUser.FirstName,
 		LastName:  	registerUser.LastName,
 		Role:      	registerUser.Role,
+		Barangay_ID: 	&barangay_ID_uint,
 		Contact:   	registerUser.Contact,
 	}
 
