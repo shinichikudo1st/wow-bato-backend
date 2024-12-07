@@ -78,7 +78,7 @@ func CheckAuth(c *gin.Context){
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated"), "role": session.Get("user_role"), "user_id": session.Get("user_id")})
+	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated"), "role": session.Get("user_role"), "user_id": session.Get("user_id"), "barangay_id": session.Get("barangay_id")})
 }
 
 func GetUserProfile(c *gin.Context){
