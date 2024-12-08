@@ -59,31 +59,36 @@ func UpdateBudgetCategory(budget_ID string, updateBudgetCategory models.UpdateBu
 
 }
 
-func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]models.Budget_Category, error) {
+func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]models.BudgetCategoryResponse, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
-		return []models.Budget_Category{}, err
+		return []models.BudgetCategoryResponse{}, err
 	}
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
-		return []models.Budget_Category{}, err
+		return []models.BudgetCategoryResponse{}, err
 	}
 
 	limitInt, err := strconv.Atoi(limit)
 	if err != nil {
-		return []models.Budget_Category{}, err
+		return []models.BudgetCategoryResponse{}, err
 	}
 
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
-		return []models.Budget_Category{}, err
+		return []models.BudgetCategoryResponse{}, err
 	}
 
 	offset := (pageInt - 1) * limitInt
 
-	var budgetCategory []models.Budget_Category
-	result := db.Preload("Barangay").Where("barangay_ID = ?", barangay_ID_int).Limit(limitInt).Offset(offset).Find(&budgetCategory)
+	var budgetCategory []models.BudgetCategoryResponse
+	result := db.Model(&models.Budget_Category{}).
+		Select("id, name, description, barangay_ID").
+		Where("barangay_ID = ?", barangay_ID_int).
+		Limit(limitInt).
+		Offset(offset).
+		Scan(&budgetCategory)
 
 
 	return budgetCategory, result.Error 

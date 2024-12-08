@@ -100,7 +100,7 @@ func GetAllBudgetCategory(c *gin.Context){
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "All Budget Category Retrieved", "data": budgetCategories})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "All Budget Category Retrieveds", "data": budgetCategories})
 }
 
 func GetSingleBudgetCategory(c *gin.Context){
