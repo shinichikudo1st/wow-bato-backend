@@ -94,6 +94,26 @@ func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]mode
 	return budgetCategory, result.Error 
 }
 
+
+func GetBudgetCategoryCount(barangay_ID string) (int64, error) {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return 0, err
+	}
+
+	barangay_ID_int, err := strconv.Atoi(barangay_ID)
+	if err != nil {
+		return 0, err
+	}
+
+	var count int64
+	if err := db.Model(&models.Budget_Category{}).Where("barangay_ID = ?", barangay_ID_int).Count(&count).Error; err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 func GetBudgetCategory(barangay_ID string, budget_ID string)(models.Budget_Category, error){
 	db, err := database.ConnectDB()
 	if err != nil {
