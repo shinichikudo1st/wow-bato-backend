@@ -5,6 +5,8 @@ import (
 	"wow-bato-backend/internal/models"
 	"wow-bato-backend/internal/services"
 
+	"sync"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
@@ -81,7 +83,7 @@ func UpdateBudgetCategory(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Updated"})
 }
 
-func GetAllBudgetCategory(c *gin.Context){
+func GetAllBudgetCategory(c *gin.Context) {
 	session := sessions.Default(c)
 
 	if session.Get("authenticated") != true {
@@ -93,15 +95,65 @@ func GetAllBudgetCategory(c *gin.Context){
 	page := c.Query("page")
 	barangay_ID := c.Param("barangay_ID")
 
-	budgetCategories, err := services.GetAllBudgetCategory(barangay_ID, limit, page)
+	// Results and error handling
+	var (
+		budgetCategories []models.BudgetCategoryResponse
+		count            int64
+		errors           []error
+	)
 
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var wg sync.WaitGroup
+	var mu sync.Mutex // Mutex for safely appending errors
+
+	wg.Add(2) // Two goroutines
+
+	// Fetch budget categories in a goroutine
+	go func() {
+		defer wg.Done()
+		result, err := services.GetAllBudgetCategory(barangay_ID, limit, page)
+		if err != nil {
+			mu.Lock()
+			errors = append(errors, err)
+			mu.Unlock()
+			return
+		}
+		mu.Lock()
+		budgetCategories = result
+		mu.Unlock()
+	}()
+
+	// Fetch budget category count in a goroutine
+	go func() {
+		defer wg.Done()
+		result, err := services.GetBudgetCategoryCount(barangay_ID)
+		if err != nil {
+			mu.Lock()
+			errors = append(errors, err)
+			mu.Unlock()
+			return
+		}
+		mu.Lock()
+		count = result
+		mu.Unlock()
+	}()
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+
+	// Handle errors if any
+	if len(errors) > 0 {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": errors[0].Error()})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "All Budget Category Retrieveds", "data": budgetCategories})
+	// Send JSON response
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"message": "All Budget Categories Retrieved",
+		"data":    budgetCategories,
+		"count":   count,
+	})
 }
+
 
 func GetSingleBudgetCategory(c *gin.Context){
 	session := sessions.Default(c)
