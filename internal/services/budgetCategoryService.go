@@ -114,6 +114,25 @@ func GetBudgetCategoryCount(barangay_ID string) (int64, error) {
 	return count, nil
 }
 
+func GetBudgetCategoryOptions(barangay_ID string) ([]models.BudgetCategoryOptions, error) {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return []models.BudgetCategoryOptions{}, err
+	}
+
+	barangay_ID_int, err := strconv.Atoi(barangay_ID)
+	if err != nil {
+		return []models.BudgetCategoryOptions{}, err
+	}
+
+	var categoryOptions []models.BudgetCategoryOptions
+	if err := db.Model(&models.Budget_Category{}).Select("id, name").Where("barangay_id = ?", barangay_ID_int).Scan(&categoryOptions).Error; err != nil {
+		return []models.BudgetCategoryOptions{}, err
+	}
+
+	return categoryOptions, nil
+}
+
 func GetBudgetCategory(barangay_ID string, budget_ID string)(models.Budget_Category, error){
 	db, err := database.ConnectDB()
 	if err != nil {

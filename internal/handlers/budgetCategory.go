@@ -154,6 +154,25 @@ func GetAllBudgetCategory(c *gin.Context) {
 	})
 }
 
+func GetBudgetCategoryOptions(c *gin.Context){
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+		return
+	}
+
+	barangay_ID := c.Param("barangay_ID")
+
+	options, err := services.GetBudgetCategoryOptions(barangay_ID)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Options Retrieved", "data": options})
+}
 
 func GetSingleBudgetCategory(c *gin.Context){
 	session := sessions.Default(c)
