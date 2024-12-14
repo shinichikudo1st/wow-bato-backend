@@ -2,6 +2,7 @@ package services
 
 import (
 	"strconv"
+	"time"
 	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
 )
@@ -17,12 +18,25 @@ func AddNewProject(barangay_ID uint, categoryID string, newProject models.NewPro
 		return err
 	}
 
+    layout := "2006-01-02"
+
+    startDate, err := time.Parse(layout, newProject.StartDate)
+    if err != nil {
+        return err
+    }
+
+    endDate, err := time.Parse(layout, newProject.EndDate)
+    if err != nil {
+        return err
+    }
+
 	project := models.Project{
 		Barangay_ID: barangay_ID,
 		CategoryID: uint(categoryID_int),
 		Name: newProject.Name,
 		Description: newProject.Description,
-		StartDate: newProject.StartDate,
+		StartDate: startDate,
+        EndDate: endDate,
 		Status: newProject.Status,
 	}
 
@@ -109,7 +123,7 @@ func UpdateProjectStatus(projectID string, barangay_ID uint, newStatus models.Ne
 
     } else {
         project.Status = newStatus.Status
-        project.EndDate = &newStatus.FlexDate
+        project.EndDate = newStatus.FlexDate
 
         result := db.Save(&project)
         return result.Error

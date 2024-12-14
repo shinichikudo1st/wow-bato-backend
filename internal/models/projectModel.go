@@ -5,7 +5,8 @@ import "time"
 type NewProject struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	StartDate   time.Time `json:"startDate"`
+	StartDate   string `json:"startDate"`
+    EndDate     string `json:"endDate"`
 	Status string `json:"status"`
 }
 

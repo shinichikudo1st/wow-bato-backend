@@ -18,7 +18,12 @@ func AddNewProject(c *gin.Context){
 	}
 
 	categoryID := c.Param("categoryID")
-	barangay_ID := session.Get("barangay_ID").(uint)
+	barangayIDValue := session.Get("barangay_id")
+	barangay_ID, ok := barangayIDValue.(uint)
+	if !ok {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Invalid barangay_ID"})
+		return
+	}
 	
 
 	var newProject models.NewProject
