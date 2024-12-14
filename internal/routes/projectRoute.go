@@ -11,7 +11,7 @@ func RegisterProjectRoutes(router *gin.RouterGroup){
 	{
 		project.POST("/add/:categoryID", handlers.AddNewProject)
 		project.DELETE("/delete/:projectID", handlers.DeleteProject)
-		project.GET("/all", handlers.GetAllProjects)
+		project.GET("/all/:categoryID", handlers.GetAllProjects)
 		project.PATCH("/update-status/:projectID", handlers.UpdateProjectStatus)
 	}
 }

@@ -94,9 +94,10 @@ func GetAllProjects(c *gin.Context){
 		return
 	}
 	
-	barangay_ID := session.Get("barangay_ID").(uint)
+	categoryID := c.Param("categoryID")
+	barangay_ID := session.Get("barangay_id").(uint)
 
-	projects, err := services.GetAllProjects(barangay_ID)
+	projects, err := services.GetAllProjects(barangay_ID, categoryID)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

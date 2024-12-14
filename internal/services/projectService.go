@@ -85,16 +85,26 @@ func UpdateProject(barangay_ID uint, projectID string, updateProject models.Upda
     return result.Error
 }
 
-func GetAllProjects(barangay_ID uint) ([]models.Project, error) {
+func GetAllProjects(barangay_ID uint, categoryID string) ([]models.ProjectList, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
 		return nil, err
 	}
 
-	var projects []models.Project
-	result := db.Where("barangay_id = ?", barangay_ID).Find(&projects)
+    categoryID_int, err := strconv.Atoi(categoryID)
+    if err != nil {
+        return []models.ProjectList{}, err
+    }
 
-	return projects, result.Error
+	var projects []models.ProjectList
+    if err := db.Model(&models.Project{}).
+        Where("barangay_id = ? AND category_id = ?", barangay_ID, categoryID_int).
+        Select("id, name, status, start_date, end_date").
+        Scan(&projects).Error; err != nil {
+            return []models.ProjectList{}, err
+        }
+
+	return projects, nil
 }
 
 func UpdateProjectStatus(projectID string, barangay_ID uint, newStatus models.NewProjectStatus) error {
