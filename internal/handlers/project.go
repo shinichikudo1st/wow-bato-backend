@@ -96,8 +96,10 @@ func GetAllProjects(c *gin.Context){
 	
 	categoryID := c.Param("categoryID")
 	barangay_ID := session.Get("barangay_id").(uint)
+	limit := c.Query("limit")
+	page := c.Query("page")
 
-	projects, err := services.GetAllProjects(barangay_ID, categoryID)
+	projects, err := services.GetAllProjects(barangay_ID, categoryID, limit, page)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

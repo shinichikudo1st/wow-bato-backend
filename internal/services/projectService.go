@@ -85,11 +85,23 @@ func UpdateProject(barangay_ID uint, projectID string, updateProject models.Upda
     return result.Error
 }
 
-func GetAllProjects(barangay_ID uint, categoryID string) ([]models.ProjectList, error) {
+func GetAllProjects(barangay_ID uint, categoryID string, limit string, page string) ([]models.ProjectList, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
 		return nil, err
 	}
+
+    limit_int, err := strconv.Atoi(categoryID)
+    if err != nil {
+        return []models.ProjectList{}, err
+    }
+
+    page_int, err := strconv.Atoi(categoryID)
+    if err != nil {
+        return []models.ProjectList{}, err
+    }
+
+    offset := (page_int - 1) * limit_int
 
     categoryID_int, err := strconv.Atoi(categoryID)
     if err != nil {
@@ -100,6 +112,8 @@ func GetAllProjects(barangay_ID uint, categoryID string) ([]models.ProjectList, 
     if err := db.Model(&models.Project{}).
         Where("barangay_id = ? AND category_id = ?", barangay_ID, categoryID_int).
         Select("id, name, status, start_date, end_date").
+        Limit(limit_int).
+        Offset(offset).
         Scan(&projects).Error; err != nil {
             return []models.ProjectList{}, err
         }
