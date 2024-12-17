@@ -91,12 +91,12 @@ func GetAllProjects(barangay_ID uint, categoryID string, limit string, page stri
 		return nil, err
 	}
 
-    limit_int, err := strconv.Atoi(categoryID)
+    limit_int, err := strconv.Atoi(limit)
     if err != nil {
         return []models.ProjectList{}, err
     }
 
-    page_int, err := strconv.Atoi(categoryID)
+    page_int, err := strconv.Atoi(page)
     if err != nil {
         return []models.ProjectList{}, err
     }
