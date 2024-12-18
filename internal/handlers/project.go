@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"sync"
 	"wow-bato-backend/internal/models"
 	"wow-bato-backend/internal/services"
 
@@ -95,17 +96,61 @@ func GetAllProjects(c *gin.Context){
 	}
 	
 	categoryID := c.Param("categoryID")
-	barangay_ID := session.Get("barangay_id").(uint)
+	barangay_ID, ok := session.Get("barangay_id").(uint)
+	if !ok {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Invalid session data"})
+		return
+	}
 	limit := c.Query("limit")
 	page := c.Query("page")
 
-	projects, err := services.GetAllProjects(barangay_ID, categoryID, limit, page)
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var (
+		projectList []models.ProjectList
+		budgetCategory	models.Budget_Category
+		errors		[]error
+	)
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	wg.Add(2)
+
+	go func(){
+		defer wg.Done()
+		result, err := services.GetAllProjects(barangay_ID, categoryID, limit, page)
+		if err != nil {
+			mu.Lock()
+			errors = append(errors, err)
+			mu.Unlock()
+			return
+		}
+		mu.Lock()
+		projectList = result
+		mu.Unlock()
+	}()
+
+	go func(){
+		defer wg.Done()
+		result, err := services.GetBudgetCategory(barangay_ID, categoryID)
+		if err != nil {
+			mu.Lock()
+			errors = append(errors, err)
+			mu.Unlock()
+			return
+		}
+		mu.Lock()
+		budgetCategory = result
+		mu.Unlock()
+	}()
+	
+	wg.Wait()
+
+	if len(errors) > 0 {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": errors[0].Error()})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"projects": projects})
+	c.IndentedJSON(http.StatusOK, gin.H{"projects": projectList, "category": budgetCategory})
 }
 
 func UpdateProjectStatus(c *gin.Context){
