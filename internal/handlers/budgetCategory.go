@@ -162,7 +162,7 @@ func GetSingleBudgetCategory(c *gin.Context){
 		return
 	}
 
-	barangay_ID := c.Param("barangay_ID")
+	barangay_ID := session.Get("barangay_id").(uint)
 	budget_ID := c.Param("budget_ID")
 
 	budgetCategory, err := services.GetBudgetCategory(barangay_ID, budget_ID)
