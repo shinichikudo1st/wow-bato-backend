@@ -114,19 +114,19 @@ func GetBudgetCategoryCount(barangay_ID string) (int64, error) {
 	return count, nil
 }
 
-func GetBudgetCategory(barangay_ID uint, budget_ID string)(models.Budget_Category, error){
+func GetBudgetCategory(barangay_ID uint, budget_ID string)(models.DisplayBudgetCategory, error){
 	db, err := database.ConnectDB()
 	if err != nil {
-		return models.Budget_Category{}, err
+		return models.DisplayBudgetCategory{}, err
 	}
 
 	budget_ID_int, err := strconv.Atoi(budget_ID)
 	if err != nil {
-		return models.Budget_Category{}, err
+		return models.DisplayBudgetCategory{}, err
 	}
 
-	var budgetCategory models.Budget_Category
-	result := db.Where("barangay_ID = ? AND id = ?", barangay_ID, budget_ID_int).First(&budgetCategory)
+	var budgetCategory models.DisplayBudgetCategory
+	result := db.Model(&models.Budget_Category{}).Where("barangay_ID = ? AND id = ?", barangay_ID, budget_ID_int).Scan(&budgetCategory)
 	
 
 	return budgetCategory, result.Error

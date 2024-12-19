@@ -106,7 +106,7 @@ func GetAllProjects(c *gin.Context){
 
 	var (
 		projectList []models.ProjectList
-		budgetCategory	models.Budget_Category
+		budgetCategory	models.DisplayBudgetCategory
 		errors		[]error
 	)
 

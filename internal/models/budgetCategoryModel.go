@@ -17,3 +17,8 @@ type BudgetCategoryResponse struct {
 	Description string `json:"description"`
 	Barangay_ID uint   `json:"barangay_ID"`
 }
+
+type DisplayBudgetCategory struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
