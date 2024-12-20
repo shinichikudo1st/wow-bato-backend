@@ -4,6 +4,8 @@ import (
 	"strconv"
 	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
+
+	"gorm.io/gorm"
 )
 
 func AddBudgetCategory(budgetCategory models.NewBudgetCategory) error {
@@ -59,36 +61,39 @@ func UpdateBudgetCategory(budget_ID string, updateBudgetCategory models.UpdateBu
 
 }
 
-func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]models.BudgetCategoryResponse, error) {
+func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]models.Budget_Category, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
-		return []models.BudgetCategoryResponse{}, err
+		return []models.Budget_Category{}, err
 	}
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
-		return []models.BudgetCategoryResponse{}, err
+		return []models.Budget_Category{}, err
 	}
 
 	limitInt, err := strconv.Atoi(limit)
 	if err != nil {
-		return []models.BudgetCategoryResponse{}, err
+		return []models.Budget_Category{}, err
 	}
 
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
-		return []models.BudgetCategoryResponse{}, err
+		return []models.Budget_Category{}, err
 	}
 
 	offset := (pageInt - 1) * limitInt
 
-	var budgetCategory []models.BudgetCategoryResponse
+	var budgetCategory []models.Budget_Category
 	result := db.Model(&models.Budget_Category{}).
+		Preload("Projects", func(db *gorm.DB) *gorm.DB{
+			return db.Select("name, status, category_id")
+		}).
 		Select("id, name, description, barangay_ID").
 		Where("barangay_ID = ?", barangay_ID_int).
 		Limit(limitInt).
 		Offset(offset).
-		Scan(&budgetCategory)
+		Find(&budgetCategory)
 
 
 	return budgetCategory, result.Error 

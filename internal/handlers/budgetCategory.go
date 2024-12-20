@@ -97,7 +97,7 @@ func GetAllBudgetCategory(c *gin.Context) {
 
 	// Results and error handling
 	var (
-		budgetCategories []models.BudgetCategoryResponse
+		budgetCategories []models.Budget_Category
 		count            int64
 		errors           []error
 	)
