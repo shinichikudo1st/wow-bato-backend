@@ -73,7 +73,7 @@ type Budget_Item struct {
 type Feedback struct {
 	gorm.Model
 	Content string `gorm:"type:text;not null"`
-	Rating int `gorm:"not null"`
+	Role string `gorm:"not null"`
 	UserID uint `gorm:"not null"`
 	User User `gorm:"foreignKey:UserID"`
 }

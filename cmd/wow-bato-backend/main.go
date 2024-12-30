@@ -48,6 +48,9 @@ func main() {
 
 		// Project Routes API Version 1
 		routes.RegisterProjectRoutes(v1)
+
+		// Feedback Routes API Version 1
+		routes.RegisterFeedbackRoutes(v1)
 	}
 
 	
