@@ -18,6 +18,12 @@ type BudgetCategoryResponse struct {
 	Barangay_ID uint   `json:"barangay_ID"`
 }
 
+type ProjectResponse struct {
+	Name        string `json:"name"`
+	Status      string `json:"status"`
+	Category_ID uint   `json:"category_ID"`
+}
+
 type DisplayBudgetCategory struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
