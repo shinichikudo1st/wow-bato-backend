@@ -15,6 +15,7 @@ func CreateFeedback(newFeedback models.NewFeedback) error {
         Content: newFeedback.Content,
         UserID: newFeedback.UserID,
         Role: newFeedback.Role,
+        ProjectID: newFeedback.ProjectID,
     }
 
     result := db.Create(&feedback)
