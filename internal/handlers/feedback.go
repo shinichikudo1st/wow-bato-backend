@@ -31,3 +31,22 @@ func CreateFeedBack(c *gin.Context) {
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "New feedback created"})
 }
+
+func GetAllFeedbacks(c *gin.Context){
+    session := sessions.Default(c)
+
+    if session.Get("authenticated") != true {
+        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Access Denied: Unauthorized"})
+        return
+    }
+
+    projectID := c.Param("project_id")
+    feedbacks, err := services.GetAllFeedback(projectID)
+    if err != nil {
+        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.IndentedJSON(http.StatusOK, gin.H{"feedbacks": feedbacks})
+
+}

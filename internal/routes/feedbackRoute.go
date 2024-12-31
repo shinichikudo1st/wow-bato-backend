@@ -10,6 +10,6 @@ func RegisterFeedbackRoutes(router *gin.RouterGroup) {
 	feedback := router.Group("/feedback")
 	{
 		feedback.POST("/create", handlers.CreateFeedBack)
-		feedback.GET("/get")
+		feedback.GET("/get", handlers.GetAllFeedbacks)
 	}
 }
