@@ -40,7 +40,7 @@ func GetAllFeedbacks(c *gin.Context){
         return
     }
 
-    projectID := c.Param("project_id")
+    projectID := c.Param("projectID")
     feedbacks, err := services.GetAllFeedback(projectID)
     if err != nil {
         c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
