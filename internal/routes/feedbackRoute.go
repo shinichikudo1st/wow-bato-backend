@@ -9,7 +9,7 @@ import (
 func RegisterFeedbackRoutes(router *gin.RouterGroup) {
 	feedback := router.Group("/feedback")
 	{
-		feedback.POST("/create", handlers.CreateFeedBack)
+        feedback.POST("/create/:projectID", handlers.CreateFeedBack)
         feedback.GET("/all/:projectID", handlers.GetAllFeedbacks)
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"wow-bato-backend/internal/models"
 )
 
-func CreateFeedback(newFeedback models.NewFeedback) error {
+func CreateFeedback(newFeedback models.CreateFeedback) error {
 	db, err := database.ConnectDB()
     if err != nil {
         return err

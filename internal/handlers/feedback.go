@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"wow-bato-backend/internal/models"
 	"wow-bato-backend/internal/services"
 
@@ -23,7 +24,24 @@ func CreateFeedBack(c *gin.Context) {
         return
     }
 
-    err := services.CreateFeedback(newFeedback)
+    project_id := c.Param("projectID")
+    user_id := session.Get("user_id").(uint)
+    user_role := session.Get("user_role").(string)
+
+    project_id_int, err := strconv.Atoi(project_id)
+    if err != nil {
+        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    feedback := models.CreateFeedback{
+        Content: newFeedback.Content,
+        Role: user_role,
+        UserID: user_id,
+        ProjectID: uint(project_id_int),
+    }
+
+    err = services.CreateFeedback(feedback)
     if err != nil {
         c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
