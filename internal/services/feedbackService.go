@@ -40,6 +40,25 @@ func GetAllFeedback(projectID string)([]models.GetAllFeedbacks, error){
     err != nil {
         return []models.GetAllFeedbacks{}, err
     }
+    
+    var user_id_list []uint
+    for _, feedback := range feedbacks {
+        user_id_list = append(user_id_list, feedback.UserID)
+    }
+
+    var users []models.FeedbackUser
+    if err := db.Model(&models.User{}).Where("id IN (?)", user_id_list).Select("id, first_name, last_name").Scan(&users).Error; err != nil {
+        return []models.GetAllFeedbacks{}, err
+    }
+
+    for i, feedback := range feedbacks {
+        for _, user := range users {
+            if user.ID == feedback.UserID {
+                feedbacks[i].FirstName = user.FirstName
+                feedbacks[i].LastName = user.LastName
+            }
+        }
+    }
 
     return feedbacks, nil
 }
