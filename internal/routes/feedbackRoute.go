@@ -11,5 +11,6 @@ func RegisterFeedbackRoutes(router *gin.RouterGroup) {
 	{
         feedback.POST("/create/:projectID", handlers.CreateFeedBack)
         feedback.GET("/all/:projectID", handlers.GetAllFeedbacks)
+		feedback.PUT("/update/:feedbackID", handlers.EditFeedback)
 	}
 }

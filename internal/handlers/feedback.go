@@ -68,3 +68,27 @@ func GetAllFeedbacks(c *gin.Context){
     c.IndentedJSON(http.StatusOK, gin.H{"feedbacks": feedbacks})
 
 }
+
+func EditFeedback(c *gin.Context){
+    session := sessions.Default(c)
+
+    if session.Get("authenticated") != true {
+        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Access Denied: Unauthorized"})
+        return
+    }
+
+    var newFeedback models.NewFeedback
+    if err := c.ShouldBindJSON(&newFeedback); err != nil {
+        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    feedbackID := c.Param("feedbackID")
+    err := services.EditFeedback(feedbackID, newFeedback)
+    if err != nil {
+        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.IndentedJSON(http.StatusOK, gin.H{"message": "Feedback edited"})
+}

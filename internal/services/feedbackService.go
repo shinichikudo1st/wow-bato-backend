@@ -62,3 +62,26 @@ func GetAllFeedback(projectID string)([]models.GetAllFeedbacks, error){
 
     return feedbacks, nil
 }
+
+func EditFeedback(feedbackID string, editedFeedback models.NewFeedback) error {
+    db, err := database.ConnectDB()
+    if err != nil {
+        return err
+    }
+
+    feedbackID_int, err := strconv.Atoi(feedbackID)
+    if err != nil {
+        return err
+    }
+
+    var feedback models.Feedback
+    if err := db.Model(&models.Feedback{}).Where("id = ?", feedbackID_int).First(&feedback).Error; err != nil {
+        return err
+    }
+
+    feedback.Content = editedFeedback.Content
+
+    result := db.Save(&feedback)
+
+    return result.Error
+}
