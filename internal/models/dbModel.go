@@ -17,6 +17,7 @@ type User struct {
 	Barangay_ID *uint 	  `gorm:"default:null"`
 	Barangay 	Barangay  `gorm:"foreignKey:Barangay_ID"`
 	Feedbacks	[]Feedback `gorm:"foreignKey:UserID"`
+	FeedbackReplies []FeedbackReply `gorm:"foreignKey:UserID"`
 }
 
 type Barangay struct {
@@ -69,14 +70,22 @@ type Budget_Item struct {
 	Project 			Project `gorm:"foreignKey:ProjectID"`
 }
 
-
-
 type Feedback struct {
 	gorm.Model
 	Content string `gorm:"type:text;not null"`
 	Role string `gorm:"not null"`
     ProjectID uint `gorm:"not null"`
     Project Project `gorm:"foreignKey:ProjectID"`
+	UserID uint `gorm:"not null"`
+	User User `gorm:"foreignKey:UserID"`
+	FeedbackReplies []FeedbackReply `gorm:"foreignKey:FeedbackID"`
+}
+
+type FeedbackReply struct {
+	gorm.Model
+	Content string `gorm:"type:text;not null"`
+	FeedbackID uint `gorm:"not null"`
+	Feedback Feedback `gorm:"foreignKey:FeedbackID"`
 	UserID uint `gorm:"not null"`
 	User User `gorm:"foreignKey:UserID"`
 }

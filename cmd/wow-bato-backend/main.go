@@ -51,6 +51,9 @@ func main() {
 
 		// Feedback Routes API Version 1
 		routes.RegisterFeedbackRoutes(v1)
+
+		// Feedback Replies Routes API Version 1
+		routes.RegisterFeedbackReplyRoutes(v1)
 	}
 
 	
