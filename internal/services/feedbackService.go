@@ -85,3 +85,22 @@ func EditFeedback(feedbackID string, editedFeedback models.NewFeedback) error {
 
     return result.Error
 }
+
+func DeleteFeedback(feedbackID string) error {
+    db, err := database.ConnectDB()
+    if err != nil {
+        return err
+    }
+
+    feedbackID_int, err := strconv.Atoi(feedbackID)
+    if err != nil {
+        return err
+    }
+
+    var feedback models.Feedback
+    if err := db.Model(&models.Feedback{}).Where("id = ?", feedbackID_int).Delete(&feedback).Error; err != nil {
+        return err
+    }
+
+    return nil
+}
