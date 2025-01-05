@@ -1,11 +1,15 @@
 package routes
 
-import "github.com/gin-gonic/gin"
+import (
+	"wow-bato-backend/internal/handlers"
+
+	"github.com/gin-gonic/gin"
+)
 
 func RegisterFeedbackReplyRoutes(router *gin.RouterGroup) {
 	feedbackReply := router.Group("/feedbackReply")
 	{
-		feedbackReply.POST("/create/:feedbackID")
-		feedbackReply.GET("/get/:feedbackID")
+		feedbackReply.POST("/create/:feedbackID", handlers.CreateFeedbackReply)
+		feedbackReply.GET("/get/:feedbackID", handlers.DeleteFeedbackReply)
 	}
 }

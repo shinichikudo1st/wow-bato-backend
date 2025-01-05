@@ -44,3 +44,23 @@ func CreateFeedbackReply(c *gin.Context){
 
     c.IndentedJSON(http.StatusOK, gin.H{"Message": "Reply submitted"})
 }
+
+func DeleteFeedbackReply(c *gin.Context){
+    session := sessions.Default(c)
+
+    if session.Get("authenticated") != true {
+        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Access Denied: Unauthorized"})
+        return
+    }
+
+    feedback_id := c.Param("feedbackID")
+
+    err := services.DeleteFeedbackReply(feedback_id)
+    if err != nil {
+        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+
+    c.IndentedJSON(http.StatusOK, gin.H{"message": "Reply deleted"})
+}

@@ -27,3 +27,22 @@ func CreateFeedbackReply(newReply models.NewFeedbackReply) error {
 
 	return result.Error
 }
+
+func DeleteFeedbackReply(feedbackID string) error {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return err
+	}
+
+	feedbackID_int, err := strconv.Atoi(feedbackID)
+	if err != nil {
+		return err
+	}
+
+	var reply models.FeedbackReply
+	if err := db.Where("id = ?", feedbackID_int).Delete(&reply).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
