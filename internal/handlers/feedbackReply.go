@@ -45,6 +45,25 @@ func CreateFeedbackReply(c *gin.Context){
     c.IndentedJSON(http.StatusOK, gin.H{"Message": "Reply submitted"})
 }
 
+func GetAllReplies(c *gin.Context){
+    session := sessions.Default(c)
+
+    if session.Get("authenticated") != true {
+        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Access Denied: Unauthorized"})
+        return
+    }
+
+    feedbackID := c.Param("feedbackID")
+
+    replies, err := services.GetAllReplies(feedbackID)
+    if err != nil {
+        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.IndentedJSON(http.StatusOK, gin.H{"message": "Replies retrived", "data": replies})
+}
+
 func DeleteFeedbackReply(c *gin.Context){
     session := sessions.Default(c)
 

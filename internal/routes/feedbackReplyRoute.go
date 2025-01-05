@@ -10,6 +10,7 @@ func RegisterFeedbackReplyRoutes(router *gin.RouterGroup) {
 	feedbackReply := router.Group("/feedbackReply")
 	{
 		feedbackReply.POST("/create/:feedbackID", handlers.CreateFeedbackReply)
-		feedbackReply.GET("/get/:feedbackID", handlers.DeleteFeedbackReply)
+		feedbackReply.GET("/get/:feedbackID", handlers.GetAllReplies)
+		feedbackReply.DELETE("/delete/:feedbackID", handlers.DeleteFeedbackReply)
 	}
 }

@@ -28,6 +28,25 @@ func CreateFeedbackReply(newReply models.NewFeedbackReply) error {
 	return result.Error
 }
 
+func GetAllReplies(feedbackID string)([]models.FeedbackReply, error){
+	db, err := database.ConnectDB()
+	if err != nil {
+		return []models.FeedbackReply{}, err
+	}
+
+	feedbackID_int, err := strconv.Atoi(feedbackID)
+	if err != nil {
+		return []models.FeedbackReply{}, err
+	}
+
+	var replies []models.FeedbackReply
+	if err := db.Where("id = ?", feedbackID_int).Find(&replies).Error; err != nil {
+		return []models.FeedbackReply{}, err
+	}
+
+	return replies, nil
+}
+
 func DeleteFeedbackReply(feedbackID string) error {
 	db, err := database.ConnectDB()
 	if err != nil {
