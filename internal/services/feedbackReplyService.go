@@ -65,3 +65,26 @@ func DeleteFeedbackReply(feedbackID string) error {
 
 	return nil
 }
+
+func EditFeedbackReply(replyID string, content string) error {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return err
+	}
+
+	replyID_int, err := strconv.Atoi(replyID)
+	if err != nil {
+		return err
+	}
+
+	var reply models.FeedbackReply
+	if err := db.Where("id = ?", replyID_int).First(&reply).Error; err != nil {
+		return err
+	}
+
+	reply.Content = content
+
+	result := db.Save(&reply)
+
+	return result.Error
+}

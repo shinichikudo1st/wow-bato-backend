@@ -83,3 +83,28 @@ func DeleteFeedbackReply(c *gin.Context){
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Reply deleted"})
 }
+
+func EditFeedbackReply(c *gin.Context){
+    session := sessions.Default(c)
+
+    if session.Get("authenticated") != true {
+        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Access Denied: Unauthorized"})
+        return
+    }
+
+    var editReply models.Reply
+    if err := c.ShouldBindJSON(&editReply); err != nil {
+        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    replyID := c.Param("replyID")
+
+    err := services.EditFeedbackReply(replyID, editReply.Content)
+    if err != nil {
+        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.IndentedJSON(http.StatusOK, gin.H{"message": "Reply Edited"})
+}
