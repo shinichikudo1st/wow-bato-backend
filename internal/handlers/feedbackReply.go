@@ -42,7 +42,7 @@ func CreateFeedbackReply(c *gin.Context){
         return
     }
 
-    c.IndentedJSON(http.StatusOK, gin.H{"Message": "Reply submitted"})
+    c.IndentedJSON(http.StatusOK, gin.H{"message": "Reply submitted"})
 }
 
 func GetAllReplies(c *gin.Context){
