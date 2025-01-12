@@ -50,12 +50,19 @@ func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 		Select("id, password, role, barangay_id").
 		Where("email = ?", loginUser.Email).
 		Scan(&user).Error; err != nil {
-		return models.UserStruct{}, errors.New("invalid email or password")
+		return models.UserStruct{}, err
 	}
 
 	if !CheckPassword(user.Password, loginUser.Password) {
 		return models.UserStruct{}, errors.New("invalid email or password")
 	}
+
+	var barangay models.Barangay
+	if err := db.Select("name").Where("id = ?", user.Barangay_ID).First(&barangay).Error; err != nil {
+		return models.UserStruct{}, err
+	}
+
+	user.Barangay_Name = barangay.Name
 
 	return user, nil
 }

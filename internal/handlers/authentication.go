@@ -44,6 +44,7 @@ func LoginUser(c *gin.Context){
 	session.Set("user_id", user.ID)
 	session.Set("user_role", user.Role)
 	session.Set("barangay_id", user.Barangay_ID)
+	session.Set("barangay_name", user.Barangay_Name)
 	session.Set("authenticated", true)
 	
 
@@ -78,7 +79,8 @@ func CheckAuth(c *gin.Context){
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated"), "role": session.Get("user_role"), "user_id": session.Get("user_id"), "barangay_id": session.Get("barangay_id")})
+	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated"), "role": session.Get("user_role"), 
+	"user_id": session.Get("user_id"), "barangay_id": session.Get("barangay_id"), "barangay_name": session.Get("barangay_name")})
 }
 
 func GetUserProfile(c *gin.Context){

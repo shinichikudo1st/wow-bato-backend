@@ -16,10 +16,11 @@ type LoginUser struct {
 }
 
 type UserStruct struct {
-	ID          uint
-	Password    string
-	Role        string
-	Barangay_ID uint
+	ID            uint
+	Password      string
+	Role          string
+	Barangay_ID   uint
+	Barangay_Name string
 }
 
 type UserProfile struct {
