@@ -1,3 +1,5 @@
+// Package services provides budget category-related business logic and operations for the application.
+// It handles budget category management while maintaining separation of concerns from the database and presentation layers.
 package services
 
 import (
@@ -16,7 +18,7 @@ import (
 // Parameters:
 //   - budgetCategory: models.NewBudgetCategory -
 //     Contains budget category data including:
-//   - Name: Budget category name
+//   - Name: Budget category namse
 //   - Description: Budget category description
 //   - Barangay_ID: Barangay ID
 //
