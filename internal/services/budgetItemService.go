@@ -1,3 +1,5 @@
+// Package services provides budget item-related business logic and operations for the application.
+// It handles budget item management while maintaining separation of concerns from the database and presentation layers.
 package services
 
 import (
