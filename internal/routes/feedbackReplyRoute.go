@@ -6,6 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// RegisterFeedbackReplyRoutes registers feedback reply-related routes on the provided router group.
+//
+// This route contains:
+// - POST /feedbackReply/create/:feedbackID: Handles creating a new feedback reply.
+// - GET /feedbackReply/get/:feedbackID: Handles retrieving a list of feedback replies.
+// - DELETE /feedbackReply/delete/:feedbackID: Handles deleting a feedback reply.
+// - PUT /feedbackReply/edit/:replyID: Handles updating a feedback reply.
 func RegisterFeedbackReplyRoutes(router *gin.RouterGroup) {
 	feedbackReply := router.Group("/feedbackReply")
 	{
