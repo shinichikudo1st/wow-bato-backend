@@ -1,5 +1,6 @@
 package models
 
+// JSON struct for creating new user
 type RegisterUser struct {
 	Email       string `json:"email"`
 	Password    string `json:"password"`
@@ -10,11 +11,13 @@ type RegisterUser struct {
 	Contact     string `json:"contact"`
 }
 
+// JSON struct for logging in
 type LoginUser struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
+// struct used for storing session data
 type UserStruct struct {
 	ID            uint
 	Password      string
@@ -23,6 +26,7 @@ type UserStruct struct {
 	Barangay_Name string
 }
 
+// struct to be returned for user profile display
 type UserProfile struct {
 	ID        uint
 	Email     string
