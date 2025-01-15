@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	// Check if .env file exists
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -20,9 +21,13 @@ func main() {
 
 	router := gin.Default()
 
+	// Stores the SESSION_SECRET in a cookie
 	store := cookie.NewStore([]byte(os.Getenv("SESSION_SECRET")))
+
+	// Creates a session using the stored SESSION_SECRET key
 	router.Use(sessions.Sessions("mysession", store))
 
+	// Lists the allowed methods, headers, origin, and allow credentials
 	router.Use(cors.New(cors.Config{
         AllowOrigins:     []string{"http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -31,7 +36,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	
+	// API versioning for flexibility and scalability
 	v1 := router.Group("/api/v1")
 	{
 		// User Routes API Version 1
@@ -56,8 +61,8 @@ func main() {
 		routes.RegisterFeedbackReplyRoutes(v1)
 	}
 
-	
 
+	// Server will run on port 8080
 	router.Run(":8080")
 
 }
