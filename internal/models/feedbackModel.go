@@ -4,6 +4,7 @@ type NewFeedback struct {
 	Content string `json:"content"`
 }
 
+// struct used for inputting data in the database
 type CreateFeedback struct {
 	Content   string
 	Role      string
