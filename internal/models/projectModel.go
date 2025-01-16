@@ -15,11 +15,13 @@ type UpdateProject struct {
     Description string `json:"description"`
 }
 
+// For displaying Project Status at the Client Side
 type NewProjectStatus struct {
     Status string `json:"status"`
     FlexDate time.Time `json:"flexdate"`
 }
 
+// Projects are displayed in projectList.jsx
 type ProjectList struct {
     ID uint `json:"id"`
     Name string `json:"name"`
