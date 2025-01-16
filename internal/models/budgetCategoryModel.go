@@ -11,6 +11,7 @@ type UpdateBudgetCategory struct {
 	Description string `json:"description"`
 }
 
+// For displaying at the client side BudgetCategoryList.tsx
 type BudgetCategoryResponse struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`
@@ -18,6 +19,7 @@ type BudgetCategoryResponse struct {
 	Barangay_ID uint   `json:"barangay_ID"`
 }
 
+// Display projects inside BudgetCategoryList
 type ProjectResponse struct {
 	Name        string `json:"name"`
 	Status      string `json:"status"`
