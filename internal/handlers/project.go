@@ -10,6 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Handler for adding new project
+// @Summary Add new project
+// @Tags Project
+// @Accept json
+// @Produce json
+// @Param project body models.NewProject true "Project details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func AddNewProject(c *gin.Context){
 	session := sessions.Default(c)
 
@@ -42,6 +51,13 @@ func AddNewProject(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Project Created"})
 }
 
+// Handler for deleting project
+// @Summary Delete project
+// @Tags Project
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func DeleteProject(c *gin.Context){
 	session := sessions.Default(c)
 
@@ -62,6 +78,15 @@ func DeleteProject(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Project Deleted"})
 }
 
+// Handler for updating project
+// @Summary Update project
+// @Tags Project
+// @Accept json
+// @Produce json
+// @Param project body models.UpdateProject true "Project details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func UpdateProject(c *gin.Context){
     session := sessions.Default(c)
     if session.Get("authenticated") != true {
@@ -87,6 +112,13 @@ func UpdateProject(c *gin.Context){
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Updated Project"})
 }
 
+// Handler for getting all projects
+// @Summary Get all projects
+// @Tags Project
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func GetAllProjects(c *gin.Context){
 	session := sessions.Default(c)
 
@@ -153,6 +185,15 @@ func GetAllProjects(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"projects": projectList, "category": budgetCategory})
 }
 
+// Handler for updating project status
+// @Summary Update project status
+// @Tags Project
+// @Accept json
+// @Produce json
+// @Param projectStatus body models.NewProjectStatus true "Project status details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func UpdateProjectStatus(c *gin.Context){
     session := sessions.Default(c)
     if session.Get("authenticated") != true {
