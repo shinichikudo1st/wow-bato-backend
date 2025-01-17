@@ -9,6 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Handler for user registration
+// @Summary Register a new user
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param registerUser body models.RegisterUser true "User registration details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func RegisterUser(c *gin.Context) {
 	var registerUser models.RegisterUser
 
@@ -26,6 +35,15 @@ func RegisterUser(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }
 
+// Handler for user login
+// @Summary Login a user
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param loginUser body models.LoginUser true "User login details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func LoginUser(c *gin.Context){
 	var loginUser models.LoginUser
 
@@ -57,6 +75,13 @@ func LoginUser(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "sessionStatus": session.Get("authenticated")})
 }
 
+// Handler for user logout
+// @Summary Logout a user, clears the session
+// @Tags Authentication
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func LogoutUser(c *gin.Context){
 
 	session := sessions.Default(c)
@@ -71,6 +96,13 @@ func LogoutUser(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged out successfully"})
 }
 
+// Handler for checking authentication
+// @Summary Check authentication status
+// @Tags Authentication
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func CheckAuth(c *gin.Context){
 	session := sessions.Default(c)
 
@@ -83,6 +115,13 @@ func CheckAuth(c *gin.Context){
 	"user_id": session.Get("user_id"), "barangay_id": session.Get("barangay_id"), "barangay_name": session.Get("barangay_name")})
 }
 
+// Handler for getting user profile
+// @Summary Get user profile, get user_id from session
+// @Tags Authentication
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func GetUserProfile(c *gin.Context){
 	session := sessions.Default(c)
 
