@@ -9,6 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Handler for adding barangay
+// @Summary Add barangay
+// @Tags Barangay
+// @Accept json
+// @Produce json
+// @Param barangay body models.AddBarangay true "Barangay details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func AddBarangay(c *gin.Context) {
 	session := sessions.Default(c)
 
@@ -35,6 +44,13 @@ func AddBarangay(c *gin.Context) {
 
 }
 
+// Handler for getting barangay
+// @Summary Get barangay
+// @Tags Barangay
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func GetAllBarangay(c *gin.Context){
 	session := sessions.Default(c)
 
@@ -56,6 +72,13 @@ func GetAllBarangay(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully fetched Barangays", "data": barangay})
 }
 
+// Handler for getting barangay
+// @Summary Get barangay
+// @Tags Barangay
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func GetSingleBarangay(c *gin.Context){
 	session := sessions.Default(c)
 
@@ -76,6 +99,13 @@ func GetSingleBarangay(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved specific barangay", "data": barangay})
 }
 
+// Handler for deleting barangay
+// @Summary Delete barangay
+// @Tags Barangay
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func DeleteBarangay(c *gin.Context) {
 	session := sessions.Default(c)
 
@@ -96,6 +126,15 @@ func DeleteBarangay(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully deleted the Barangay"})
 }
 
+// Handler for updating barangay
+// @Summary Update barangay
+// @Tags Barangay
+// @Accept json
+// @Produce json
+// @Param barangay body models.UpdateBarangay true "Barangay details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func UpdateBarangay(c *gin.Context) {
 	session := sessions.Default(c)
 
@@ -123,6 +162,13 @@ func UpdateBarangay(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully Updated Barangay"})
 }
 
+// Handler for getting barangay
+// @Summary Get barangay
+// @Tags Barangay
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func GetBarangayOptions(c *gin.Context){
    
     barangay, err := services.OptionBarangay()
