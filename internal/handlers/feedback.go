@@ -10,6 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Handler for creating feedback
+// @Summary Create feedback
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param feedback body models.NewFeedback true "Feedback details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func CreateFeedBack(c *gin.Context) {
     session := sessions.Default(c)
 
@@ -50,6 +59,14 @@ func CreateFeedBack(c *gin.Context) {
     c.IndentedJSON(http.StatusOK, gin.H{"message": "New feedback created"})
 }
 
+// Handler for getting all feedback
+// @Summary Get all feedback
+// @Tags Feedback
+// @Accept json no body
+// @Produce json
+// @Param projectID path string true "Project ID"
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func GetAllFeedbacks(c *gin.Context){
     session := sessions.Default(c)
 
@@ -69,6 +86,15 @@ func GetAllFeedbacks(c *gin.Context){
 
 }
 
+// Handler for editing feedback
+// @Summary Edit feedback
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param feedback body models.NewFeedback true "Feedback details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func EditFeedback(c *gin.Context){
     session := sessions.Default(c)
 
@@ -93,6 +119,14 @@ func EditFeedback(c *gin.Context){
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Feedback edited"})
 }
 
+// Handler for deleting feedback
+// @Summary Delete feedback
+// @Tags Feedback
+// @Accept json no body
+// @Produce json
+// @Param feedbackID path string true "Feedback ID"
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func DeleteFeedback(c *gin.Context){
     session := sessions.Default(c)
 
