@@ -9,6 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Handler for creating feedback reply
+// @Summary Create feedback reply
+// @Tags Feedback Reply
+// @Accept json
+// @Produce json
+// @Param reply body models.Reply true "Reply details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func CreateFeedbackReply(c *gin.Context){
     session := sessions.Default(c)
 
@@ -45,6 +54,14 @@ func CreateFeedbackReply(c *gin.Context){
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Reply submitted"})
 }
 
+// Handler for getting all replies
+// @Summary Get all replies
+// @Tags Feedback Reply
+// @Accept json no body
+// @Produce json
+// @Param feedbackID path string true "Feedback ID"
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func GetAllReplies(c *gin.Context){
     session := sessions.Default(c)
 
@@ -64,6 +81,14 @@ func GetAllReplies(c *gin.Context){
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Replies retrived", "data": replies})
 }
 
+// Handler for deleting feedback reply
+// @Summary Delete feedback reply
+// @Tags Feedback Reply
+// @Accept json no body
+// @Produce json
+// @Param feedbackID path string true "Feedback ID"
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func DeleteFeedbackReply(c *gin.Context){
     session := sessions.Default(c)
 
@@ -84,6 +109,15 @@ func DeleteFeedbackReply(c *gin.Context){
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Reply deleted"})
 }
 
+// Handler for editing feedback reply
+// @Summary Edit feedback reply
+// @Tags Feedback Reply
+// @Accept json
+// @Produce json
+// @Param reply body models.Reply true "Reply details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func EditFeedbackReply(c *gin.Context){
     session := sessions.Default(c)
 
