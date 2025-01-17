@@ -11,6 +11,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Handler for adding budget category
+// @Summary Add budget category
+// @Tags Budget Category
+// @Accept json
+// @Produce json
+// @Param budgetCategory body models.NewBudgetCategory true "Budget Category details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func AddBudgetCategory(c *gin.Context){
 	session := sessions.Default(c)
 
@@ -36,6 +45,13 @@ func AddBudgetCategory(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Budget Category Added"})
 }
 
+// Handler for deleting budget category
+// @Summary Delete budget category
+// @Tags Budget Category
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func DeleteBudgetCategory(c *gin.Context){
 	session := sessions.Default(c)
 
@@ -56,6 +72,15 @@ func DeleteBudgetCategory(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Deleted"})
 }
 
+// Handler for updating budget category
+// @Summary Update budget category
+// @Tags Budget Category
+// @Accept json
+// @Produce json
+// @Param budgetCategory body models.UpdateBudgetCategory true "Budget Category details"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} gin.H
+// @Failure 500 {object} gin.H
 func UpdateBudgetCategory(c *gin.Context){
 	session := sessions.Default(c)
 
@@ -83,6 +108,13 @@ func UpdateBudgetCategory(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Updated"})
 }
 
+// Handler for getting budget category
+// @Summary Get budget category
+// @Tags Budget Category
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func GetAllBudgetCategory(c *gin.Context) {
 	session := sessions.Default(c)
 
@@ -154,6 +186,13 @@ func GetAllBudgetCategory(c *gin.Context) {
 	})
 }
 
+// Handler for getting single budget category
+// @Summary Get single budget category
+// @Tags Budget Category
+// @Accept json no body
+// @Produce json
+// @Success 200 {object} gin.H
+// @Failure 500 {object} gin.H
 func GetSingleBudgetCategory(c *gin.Context){
 	session := sessions.Default(c)
 

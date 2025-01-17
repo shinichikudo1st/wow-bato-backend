@@ -162,8 +162,8 @@ func UpdateBarangay(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully Updated Barangay"})
 }
 
-// Handler for getting barangay
-// @Summary Get barangay
+// Handler for getting barangay options
+// @Summary Get barangay for dropdown selection on the client side
 // @Tags Barangay
 // @Accept json no body
 // @Produce json
