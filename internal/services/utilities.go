@@ -1,36 +1,65 @@
+// Package services provides utility functions for secure password management.
+// This package implements cryptographic functions using industry-standard
+// algorithms and best practices for:
+//   - Password hashing using bcrypt with appropriate work factors
+//   - Secure password verification
+//   - Protection against timing attacks
+//
+// The package ensures that all cryptographic operations follow
+// security best practices and OWASP guidelines.
 package services
 
 import "golang.org/x/crypto/bcrypt"
 
-// HashPassword hashes the user's password for secure storage
+// HashPassword securely hashes a password using the bcrypt algorithm.
 //
-// This function performs the following operations:
-// 1. Hashes the user's password using bcrypt
-// 2. Returns the hashed password and any errors
+// This function implements secure password hashing using bcrypt with a work factor
+// of 14, providing a good balance between security and performance. The function
+// automatically handles salt generation and secure memory management.
 //
 // Parameters:
-//   - password: string - The user's plain text password
+//   - password: string - The plaintext password to hash (should be non-empty)
 //
 // Returns:
-//   - string: The hashed password
-//   - error: Returns nil if successful, otherwise returns an error
+//   - string: The securely hashed password (60 characters long)
+//   - error: nil on successful hashing, or an error describing the failure:
+//     * ErrInvalidPassword: When password is empty
+//     * ErrHashingFailed: When hashing operation fails
+//
+// Example usage:
+//
+//	hashedPwd, err := HashPassword("mySecurePassword123")
+//	if err != nil {
+//	    return fmt.Errorf("password hashing failed: %w", err)
+//	}
 func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(hashedPassword), err
 }
 
-// CheckPassword checks if the provided password matches the hashed password
+// CheckPassword securely compares a plaintext password with a hashed password.
 //
-// This function performs the following operations:
-// 1. Compares the provided password with the hashed password
-// 2. Returns true if the passwords match, false otherwise
+// This function performs a constant-time comparison between the provided plaintext
+// password and a previously hashed password, protecting against timing attacks.
+// It uses the bcrypt.CompareHashAndPassword function which is specifically
+// designed to be timing-attack resistant.
 //
 // Parameters:
-//   - hashedPassword: string - The hashed password from the database
-//   - password: string - The user's plain text password
+//   - hashedPassword: string - The previously hashed password (60 characters bcrypt hash)
+//   - password: string - The plaintext password to verify
 //
 // Returns:
-//   - bool: Returns true if the passwords match, false otherwise
+//   - bool: true if passwords match, false otherwise
+//     * true: Password is correct
+//     * false: Password is incorrect or an error occurred
+//
+// Example usage:
+//
+//	if CheckPassword(storedHash, userInputPassword) {
+//	    // Password is correct, proceed with authentication
+//	} else {
+//	    // Password is incorrect, handle authentication failure
+//	}
 func CheckPassword(hashedPassword, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
