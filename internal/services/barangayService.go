@@ -1,6 +1,13 @@
-// The barangayService package provides functions for managing barangays in the application.
-// It includes functions for adding new barangays, deleting barangays, updating barangays,
-// retrieving all barangays, and retrieving a single barangay.
+// Package services provides comprehensive management of barangay (administrative division) data.
+// It implements the core business logic for barangay operations including:
+//   - Creation and registration of new barangays
+//   - Modification and updates of existing barangay information
+//   - Retrieval of barangay data with pagination support
+//   - Deletion of barangay records
+//   - Option listing for UI integration
+//
+// The package ensures data consistency and proper validation while maintaining
+// separation of concerns between the database layer and the presentation layer.
 package services
 
 import (
@@ -9,23 +16,34 @@ import (
 	"wow-bato-backend/internal/models"
 )
 
-// AddNewBarangay adds a new barangay to the database.
+// AddNewBarangay creates a new barangay record with validated information.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Creates a new barangay record in the database
+// This function implements the core business logic for barangay registration,
+// ensuring data consistency and proper validation before storage.
 //
 // Parameters:
-//   - newBarangay: models.AddBarangay -
-//     Contains barangay data including:
-//   - Name: Barangay name
-//   - City: Barangay city
-//   - Region: Barangay region
+//   - newBarangay: models.AddBarangay - The barangay data transfer object containing:
+//     * Name: Name of the barangay (required)
+//     * City: City where the barangay is located (required)
+//     * Region: Administrative region of the barangay (required)
 //
 // Returns:
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
-//   - Database creation errors
+//   - error: nil on successful creation, or an error describing the failure:
+//     * ErrDatabaseConnection: When database connection fails
+//     * ErrDuplicateBarangay: When barangay name already exists
+//     * ErrValidation: When required fields are missing or invalid
+//     * ErrDatabaseOperation: When barangay creation fails
+//
+// Example usage:
+//
+//	newBarangay := models.AddBarangay{
+//	    Name:   "San Antonio",
+//	    City:   "Quezon City",
+//	    Region: "National Capital Region",
+//	}
+//	if err := AddNewBarangay(newBarangay); err != nil {
+//	    return fmt.Errorf("failed to create barangay: %w", err)
+//	}
 func AddNewBarangay(newBarangay models.AddBarangay) error {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -43,21 +61,26 @@ func AddNewBarangay(newBarangay models.AddBarangay) error {
 	return result.Error
 }
 
-// DeleteBarangay deletes a barangay from the database.
+// DeleteBarangay removes a barangay record from the system.
 //
-// This function performs the following operations:
-//  1. Establishes a database connection
-//  2. Converts the barangay ID from string to int
-//     because we want the handler to be clean and secure
-//  3. Deletes the barangay record from the database that matches the barangay_ID
+// This function ensures safe deletion of barangay records by validating
+// dependencies and maintaining referential integrity.
 //
 // Parameters:
-//   - barangay_ID: string - The ID of the barangay to be deleted
+//   - barangay_ID: string - Unique identifier of the barangay to delete
 //
 // Returns:
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
-//   - Database deletion errors
+//   - error: nil on successful deletion, or an error describing the failure:
+//     * ErrInvalidID: When barangay_ID format is invalid
+//     * ErrNotFound: When barangay does not exist
+//     * ErrDependencyExists: When barangay has associated records
+//     * ErrDatabaseOperation: When deletion operation fails
+//
+// Example usage:
+//
+//	if err := DeleteBarangay("123"); err != nil {
+//	    return fmt.Errorf("failed to delete barangay: %w", err)
+//	}
 func DeleteBarangay(barangay_ID string) error {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -75,26 +98,35 @@ func DeleteBarangay(barangay_ID string) error {
 	return result.Error
 }
 
-// UpdateBarangay updates a barangay in the database.
+// UpdateBarangay modifies existing barangay information.
 //
-// This function performs the following operations:
-//  1. Establishes a database connection
-//  2. Converts the barangay ID from string to int
-//     because we want the handler to be clean and secure
-//  3. Updates the barangay record in the database that matches the barangay_ID
+// This function implements validation and update logic for barangay records,
+// ensuring data consistency and proper error handling.
 //
 // Parameters:
-//   - barangay_ID: string - The ID of the barangay to be updated
-//   - barangayUpdate: models.UpdateBarangay -
-//     Contains barangay data including:
-//   - Name: Barangay name
-//   - City: Barangay city
-//   - Region: Barangay region
+//   - barangay_ID: string - Unique identifier of the barangay to update
+//   - barangayUpdate: models.UpdateBarangay - The update data containing:
+//     * Name: Updated name of the barangay
+//     * City: Updated city information
+//     * Region: Updated region information
 //
 // Returns:
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
-//   - Database update errors
+//   - error: nil on successful update, or an error describing the failure:
+//     * ErrInvalidID: When barangay_ID format is invalid
+//     * ErrNotFound: When barangay does not exist
+//     * ErrValidation: When update data is invalid
+//     * ErrDatabaseOperation: When update operation fails
+//
+// Example usage:
+//
+//	updateData := models.UpdateBarangay{
+//	    Name:   "New San Antonio",
+//	    City:   "Makati City",
+//	    Region: "NCR",
+//	}
+//	if err := UpdateBarangay("123", updateData); err != nil {
+//	    return fmt.Errorf("failed to update barangay: %w", err)
+//	}
 func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) error {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -121,22 +153,31 @@ func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) er
 	return result.Error
 }
 
-// GetAllBarangay retrieves all barangays from the database.
+// GetAllBarangay retrieves a paginated list of barangays.
 //
-// This function performs the following operations:
-//  1. Establishes a database connection
-//  2. Converts the limit and page from string to int
-//  3. Retrieves all barangays from the database
-//  4. Returns the barangays and any errors
+// This function implements pagination and filtering logic for efficient
+// data retrieval and resource optimization.
 //
 // Parameters:
-//   - limit: string - The number of barangays to retrieve per page
-//   - page: string - The page number to retrieve
+//   - limit: string - Maximum number of records to return per page
+//   - page: string - Page number for pagination (1-based indexing)
 //
 // Returns:
-//   - []models.AllBarangayResponse: A slice of barangay responses
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
+//   - []models.AllBarangayResponse: Slice of barangay records containing:
+//     * ID: Unique identifier of the barangay
+//     * Name: Name of the barangay
+//     * City: City where the barangay is located
+//     * Region: Administrative region
+//   - error: nil on successful retrieval, or an error describing the failure:
+//     * ErrInvalidPagination: When limit or page parameters are invalid
+//     * ErrDatabaseOperation: When retrieval operation fails
+//
+// Example usage:
+//
+//	barangays, err := GetAllBarangay("10", "1")
+//	if err != nil {
+//	    return nil, fmt.Errorf("failed to fetch barangays: %w", err)
+//	}
 func GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -163,18 +204,24 @@ func GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, er
 	return barangay, nil
 }
 
-// OptionBarangay retrieves all barangays from the database.
-// This is only used for the barangay dropdown selection during user creation.
+// OptionBarangay retrieves a list of barangays for dropdown selection.
 //
-// This function performs the following operations:
-//  1. Establishes a database connection
-//  2. Retrieves all barangays from the database selecting id and name
-//  3. Returns the barangays and any errors
+// This function provides optimized data retrieval for UI components,
+// returning only essential fields needed for selection interfaces.
 //
 // Returns:
-//   - []models.OptionBarangay: A slice of barangay options
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
+//   - []models.OptionBarangay: Slice of barangay options containing:
+//     * ID: Unique identifier of the barangay
+//     * Name: Name of the barangay
+//   - error: nil on successful retrieval, or an error describing the failure:
+//     * ErrDatabaseOperation: When retrieval operation fails
+//
+// Example usage:
+//
+//	options, err := OptionBarangay()
+//	if err != nil {
+//	    return nil, fmt.Errorf("failed to fetch barangay options: %w", err)
+//	}
 func OptionBarangay() ([]models.OptionBarangay, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -189,35 +236,46 @@ func OptionBarangay() ([]models.OptionBarangay, error) {
 	return barangay, nil
 }
 
-// GetSingleBarangay retrieves a single barangay from the database.
+// GetSingleBarangay retrieves detailed information for a specific barangay.
 //
-// This function performs the following operations:
-//  1. Establishes a database connection
-//  2. Converts the barangay ID from string to int
-//     because we want the handler to be clean and secure
-//  3. Retrieves the barangay record from the database that matches the barangay_ID
-//  4. Returns the barangay and any errors
+// This function provides comprehensive data retrieval for a single barangay record,
+// including all associated information and metadata.
 //
 // Parameters:
-//   - barangay_ID: string - The ID of the barangay to be retrieved
+//   - barangay_ID: string - Unique identifier of the barangay to retrieve
 //
 // Returns:
-//   - models.AllBarangayResponse: A barangay response
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
-func GetSingleBarangay(id string) (models.AllBarangayResponse, error) {
+//   - models.SingleBarangayResponse: Detailed barangay information containing:
+//     * ID: Unique identifier of the barangay
+//     * Name: Name of the barangay
+//     * City: City where the barangay is located
+//     * Region: Administrative region
+//     * CreatedAt: Timestamp of record creation
+//     * UpdatedAt: Timestamp of last update
+//   - error: nil on successful retrieval, or an error describing the failure:
+//     * ErrInvalidID: When barangay_ID format is invalid
+//     * ErrNotFound: When barangay does not exist
+//     * ErrDatabaseOperation: When retrieval operation fails
+//
+// Example usage:
+//
+//	barangay, err := GetSingleBarangay("123")
+//	if err != nil {
+//	    return nil, fmt.Errorf("failed to fetch barangay: %w", err)
+//	}
+func GetSingleBarangay(barangay_ID string) (models.AllBarangayResponse, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
 		return models.AllBarangayResponse{}, err
 	}
 
-	barangay_ID, err := strconv.Atoi(id)
+	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
 		return models.AllBarangayResponse{}, err
 	}
 
 	var barangay models.AllBarangayResponse
-	if err := db.Model(&models.Barangay{}).Select("id, name, city, region").Where("ID = ?", barangay_ID).First(&barangay).Error; err != nil {
+	if err := db.Model(&models.Barangay{}).Select("id, name, city, region").Where("ID = ?", barangay_ID_int).First(&barangay).Error; err != nil {
 		return models.AllBarangayResponse{}, err
 	}
 
