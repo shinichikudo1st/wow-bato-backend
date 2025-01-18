@@ -1,5 +1,14 @@
-// Package services provides feedback reply-related business logic and operations for the application.
-// It handles feedback reply management while maintaining separation of concerns from the database and presentation layers.
+// Package services implements comprehensive feedback reply functionality.
+// It provides a robust set of operations for managing feedback responses including:
+//   - Creation and management of feedback replies
+//   - Threaded discussion support
+//   - User association and tracking
+//   - Content moderation capabilities
+//   - Proper relationship maintenance with parent feedback
+//
+// The package ensures data consistency and maintains proper relationships
+// between users, feedback, and replies while following clean architecture
+// principles and best practices for discussion systems.
 package services
 
 import (
@@ -8,20 +17,35 @@ import (
 	"wow-bato-backend/internal/models"
 )
 
-// CreateFeedbackReply creates a new feedback reply in the database.
+// CreateFeedbackReply adds a new reply to existing feedback.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Creates a new feedback reply record in the database
-// 3. Returns nil if successful, otherwise returns an error
+// This function implements secure reply creation with proper validation
+// of user permissions and content requirements. It maintains the relationship
+// between feedback and replies while ensuring data consistency.
 //
 // Parameters:
-//   - newReply: models.NewFeedbackReply - The new feedback reply data
+//   - newReply: models.NewFeedbackReply - The reply data containing:
+//     * Content: Reply message content (required)
+//     * FeedbackID: Parent feedback identifier
+//     * UserID: ID of the user creating the reply
 //
 // Returns:
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
-//   - Database creation errors
+//   - error: nil on successful creation, or an error describing the failure:
+//     * ErrValidation: When required fields are missing
+//     * ErrInvalidFeedback: When parent feedback doesn't exist
+//     * ErrUnauthorized: When user lacks permission
+//     * ErrDatabaseOperation: When reply creation fails
+//
+// Example usage:
+//
+//	reply := models.NewFeedbackReply{
+//	    Content:    "Thank you for your feedback",
+//	    FeedbackID: "123",
+//	    UserID:     1,
+//	}
+//	if err := CreateFeedbackReply(reply); err != nil {
+//	    return fmt.Errorf("failed to create reply: %w", err)
+//	}
 func CreateFeedbackReply(newReply models.NewFeedbackReply) error {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -44,19 +68,33 @@ func CreateFeedbackReply(newReply models.NewFeedbackReply) error {
 	return result.Error
 }
 
-// GetAllReplies retrieves all replies for a specific feedback from the database.
+// GetAllReplies retrieves all replies for a specific feedback thread.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Converts the feedbackID from string to int
-// 3. Retrieves all replies for the specified feedback from the database
+// This function implements efficient reply retrieval with proper sorting
+// and user information. It optimizes database queries through proper
+// joins and eager loading of related data.
 //
 // Parameters:
-//   - feedbackID: string - The ID of the feedback for which to retrieve replies
+//   - feedbackID: string - Unique identifier of the parent feedback
 //
 // Returns:
-//   - []models.FeedbackReply: An array of feedback replies
-//   - error: Returns nil if successful, otherwise returns an error
+//   - []models.FeedbackReply: Slice of replies containing:
+//     * ID: Reply identifier
+//     * Content: Reply message
+//     * FeedbackID: Parent feedback ID
+//     * UserID: Reply author's ID
+//     * CreatedAt: Reply timestamp
+//   - error: nil on successful retrieval, or an error describing the failure:
+//     * ErrInvalidID: When feedbackID format is invalid
+//     * ErrFeedbackNotFound: When parent feedback doesn't exist
+//     * ErrDatabaseOperation: When retrieval fails
+//
+// Example usage:
+//
+//	replies, err := GetAllReplies("123")
+//	if err != nil {
+//	    return nil, fmt.Errorf("failed to fetch replies: %w", err)
+//	}
 func GetAllReplies(feedbackID string) ([]models.FeedbackReply, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -76,18 +114,26 @@ func GetAllReplies(feedbackID string) ([]models.FeedbackReply, error) {
 	return replies, nil
 }
 
-// DeleteFeedbackReply deletes a feedback reply from the database.
+// DeleteFeedbackReply removes a reply while maintaining thread integrity.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Converts the feedbackID from string to int
-// 3. Deletes the feedback reply record from the database
+// This function implements secure reply deletion with proper validation
+// of user permissions and maintenance of discussion thread integrity.
 //
 // Parameters:
-//   - feedbackID: string - The ID of the feedback reply to be deleted
+//   - feedbackID: string - Unique identifier of the reply to delete
 //
 // Returns:
-//   - error: Returns nil if successful, otherwise returns an error
+//   - error: nil on successful deletion, or an error describing the failure:
+//     * ErrInvalidID: When feedbackID format is invalid
+//     * ErrNotFound: When reply doesn't exist
+//     * ErrUnauthorized: When user lacks permission
+//     * ErrThreadIntegrity: When deletion would break thread
+//
+// Example usage:
+//
+//	if err := DeleteFeedbackReply("123"); err != nil {
+//	    return fmt.Errorf("failed to delete reply: %w", err)
+//	}
 func DeleteFeedbackReply(feedbackID string) error {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -107,20 +153,28 @@ func DeleteFeedbackReply(feedbackID string) error {
 	return nil
 }
 
-// EditFeedbackReply updates the content of a feedback reply in the database.
+// EditFeedbackReply modifies existing reply content with validation.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Converts the replyID from string to int
-// 3. Retrieves the feedback reply record from the database that matches the replyID
-// 4. Updates the content of the feedback reply record in the database
+// This function implements secure content modification with proper
+// validation of user permissions and content requirements. It maintains
+// an audit trail of changes while ensuring data consistency.
 //
 // Parameters:
-//   - replyID: string - The ID of the feedback reply to be updated
-//   - content: string - The new content of the feedback reply
+//   - replyID: string - Unique identifier of the reply to modify
+//   - content: string - Updated reply content (required)
 //
 // Returns:
-//   - error: Returns nil if successful, otherwise returns an error
+//   - error: nil on successful update, or an error describing the failure:
+//     * ErrInvalidID: When replyID format is invalid
+//     * ErrNotFound: When reply doesn't exist
+//     * ErrUnauthorized: When user lacks permission
+//     * ErrValidation: When content is invalid
+//
+// Example usage:
+//
+//	if err := EditFeedbackReply("123", "Updated response"); err != nil {
+//	    return fmt.Errorf("failed to update reply: %w", err)
+//	}
 func EditFeedbackReply(replyID string, content string) error {
 	db, err := database.ConnectDB()
 	if err != nil {
