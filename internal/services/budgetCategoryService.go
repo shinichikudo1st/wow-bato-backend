@@ -1,5 +1,13 @@
-// Package services provides budget category-related business logic and operations for the application.
-// It handles budget category management while maintaining separation of concerns from the database and presentation layers.
+// Package services provides comprehensive management of budget categories within barangays.
+// It implements the core business logic for budget category operations including:
+//   - Creation and registration of new budget categories
+//   - Modification and updates of existing budget category information
+//   - Retrieval of budget category data with pagination support
+//   - Deletion of budget category records
+//   - Budget category counting and statistics
+//
+// The package ensures data consistency and proper validation while maintaining
+// separation of concerns between the database layer and the presentation layer.
 package services
 
 import (
@@ -8,24 +16,33 @@ import (
 	"wow-bato-backend/internal/models"
 )
 
-// AddBudgetCategory adds a new budget category
+// AddBudgetCategory creates a new budget category record with validated information.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Creates a new budget category record in the database
-// 3. Returns nil if successful, otherwise returns an error
+// This function implements the core business logic for budget category registration,
+// ensuring data consistency and proper validation before storage.
 //
 // Parameters:
-//   - budgetCategory: models.NewBudgetCategory -
-//     Contains budget category data including:
-//   - Name: Budget category namse
-//   - Description: Budget category description
-//   - Barangay_ID: Barangay ID
+//   - budgetCategory: models.NewBudgetCategory - The budget category data containing:
+//     * Name: Name of the budget category (required)
+//     * Description: Detailed description of the budget category (required)
+//     * Barangay_ID: ID of the associated barangay (required)
 //
 // Returns:
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
-//   - Database creation errors
+//   - error: nil on successful creation, or an error describing the failure:
+//     * ErrDatabaseConnection: When database connection fails
+//     * ErrValidation: When required fields are missing or invalid
+//     * ErrDatabaseOperation: When budget category creation fails
+//
+// Example usage:
+//
+//	newCategory := models.NewBudgetCategory{
+//	    Name:        "Infrastructure",
+//	    Description: "Budget for infrastructure development",
+//	    Barangay_ID: 123,
+//	}
+//	if err := AddBudgetCategory(newCategory); err != nil {
+//	    return fmt.Errorf("failed to create budget category: %w", err)
+//	}
 func AddBudgetCategory(budgetCategory models.NewBudgetCategory) error {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -43,20 +60,26 @@ func AddBudgetCategory(budgetCategory models.NewBudgetCategory) error {
 	return result.Error
 }
 
-// DeleteBudgetCategory deletes a budget category
+// DeleteBudgetCategory removes a budget category record from the system.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Deletes a budget category record from the database
-// 3. Returns nil if successful, otherwise returns an error
+// This function ensures safe deletion of budget category records by validating
+// dependencies and maintaining referential integrity.
 //
 // Parameters:
-//   - budget_ID: string - Budget category ID
+//   - budget_ID: string - Unique identifier of the budget category to delete
 //
 // Returns:
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
-//   - Database deletion errors
+//   - error: nil on successful deletion, or an error describing the failure:
+//     * ErrInvalidID: When budget_ID format is invalid
+//     * ErrNotFound: When budget category does not exist
+//     * ErrDependencyExists: When budget category has associated records
+//     * ErrDatabaseOperation: When deletion operation fails
+//
+// Example usage:
+//
+//	if err := DeleteBudgetCategory("123"); err != nil {
+//	    return fmt.Errorf("failed to delete budget category: %w", err)
+//	}
 func DeleteBudgetCategory(budget_ID string) error {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -68,25 +91,33 @@ func DeleteBudgetCategory(budget_ID string) error {
 	return result.Error
 }
 
-// UpdateBudgetCategory updates a budget category
+// UpdateBudgetCategory modifies existing budget category information.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Converts the budget_ID from string to int
-// 3. Updates a budget category record in the database that matches the budget_ID
-// 4. Returns nil if successful, otherwise returns an error
+// This function implements validation and update logic for budget category records,
+// ensuring data consistency and proper error handling.
 //
 // Parameters:
-//   - budget_ID: string - Budget category ID
-//   - updateBudgetCategory: models.UpdateBudgetCategory -
-//     Contains budget category data including:
-//   - Name: Budget category name
-//   - Description: Budget category description
+//   - budget_ID: string - Unique identifier of the budget category to update
+//   - updateBudgetCategory: models.UpdateBudgetCategory - The update data containing:
+//     * Name: Updated name of the budget category
+//     * Description: Updated description of the budget category
 //
 // Returns:
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
-//   - Database update errors
+//   - error: nil on successful update, or an error describing the failure:
+//     * ErrInvalidID: When budget_ID format is invalid
+//     * ErrNotFound: When budget category does not exist
+//     * ErrValidation: When update data is invalid
+//     * ErrDatabaseOperation: When update operation fails
+//
+// Example usage:
+//
+//	updateData := models.UpdateBudgetCategory{
+//	    Name:        "Updated Infrastructure",
+//	    Description: "Updated infrastructure development budget",
+//	}
+//	if err := UpdateBudgetCategory("123", updateData); err != nil {
+//	    return fmt.Errorf("failed to update budget category: %w", err)
+//	}
 func UpdateBudgetCategory(budget_ID string, updateBudgetCategory models.UpdateBudgetCategory) error {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -109,25 +140,36 @@ func UpdateBudgetCategory(budget_ID string, updateBudgetCategory models.UpdateBu
 	result := db.Save(&budgetCategory)
 
 	return result.Error
-
 }
 
-// GetAllBudgetCategory retrieves all budget categories from the database
+// GetAllBudgetCategory retrieves a paginated list of budget categories for a specific barangay.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Converts the limit and page from string to int
-// 3. Retrieves all budget categories from the database
-// 4. Returns the budget categories and any errors
+// This function implements pagination and filtering logic for efficient
+// data retrieval and resource optimization.
 //
 // Parameters:
-//   - limit: string - The number of budget categories to retrieve per page
-//   - page: string - The page number to retrieve
+//   - barangay_ID: string - Unique identifier of the barangay
+//   - limit: string - Maximum number of records to return per page
+//   - page: string - Page number for pagination (1-based indexing)
 //
 // Returns:
-//   - []models.BudgetCategoryResponse: A slice of budget category responses
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
+//   - []models.BudgetCategoryResponse: Slice of budget category records containing:
+//     * ID: Unique identifier of the budget category
+//     * Name: Name of the budget category
+//     * Description: Detailed description
+//     * CreatedAt: Timestamp of record creation
+//     * UpdatedAt: Timestamp of last update
+//   - error: nil on successful retrieval, or an error describing the failure:
+//     * ErrInvalidID: When barangay_ID format is invalid
+//     * ErrInvalidPagination: When limit or page parameters are invalid
+//     * ErrDatabaseOperation: When retrieval operation fails
+//
+// Example usage:
+//
+//	categories, err := GetAllBudgetCategory("123", "10", "1")
+//	if err != nil {
+//	    return nil, fmt.Errorf("failed to fetch budget categories: %w", err)
+//	}
 func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]models.BudgetCategoryResponse, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -162,21 +204,27 @@ func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]mode
 	return budgetCategory, result.Error
 }
 
-// GetBudgetCategoryCount returns the number of budget categories for a barangay
+// GetBudgetCategoryCount retrieves the total number of budget categories for a barangay.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Converts the barangay_ID from string to int
-// 3. Retrieves the number of budget categories for the barangay
-// 4. Returns the number of budget categories and any errors
+// This function provides statistical information about budget categories,
+// useful for analytics and pagination calculations.
 //
 // Parameters:
-//   - barangay_ID: string - The ID of the barangay
+//   - barangay_ID: string - Unique identifier of the barangay
 //
 // Returns:
-//   - int64: The number of budget categories
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
+//   - int64: Total number of budget categories for the barangay
+//   - error: nil on successful count, or an error describing the failure:
+//     * ErrInvalidID: When barangay_ID format is invalid
+//     * ErrNotFound: When barangay does not exist
+//     * ErrDatabaseOperation: When count operation fails
+//
+// Example usage:
+//
+//	count, err := GetBudgetCategoryCount("123")
+//	if err != nil {
+//	    return 0, fmt.Errorf("failed to get budget category count: %w", err)
+//	}
 func GetBudgetCategoryCount(barangay_ID string) (int64, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -196,22 +244,33 @@ func GetBudgetCategoryCount(barangay_ID string) (int64, error) {
 	return count, nil
 }
 
-// GetBudgetCategory returns a single budget category
+// GetBudgetCategory retrieves detailed information for a specific budget category.
 //
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Converts the budget_ID from string to int
-// 3. Retrieves the budget category record from the database that matches the budget_ID
-// 4. Returns the budget category and any errors
+// This function provides comprehensive data retrieval for a single budget category record,
+// including all associated information and metadata.
 //
 // Parameters:
-//   - barangay_ID: uint - The ID of the barangay
-//   - budget_ID: string - The ID of the budget category
+//   - barangay_ID: uint - Unique identifier of the barangay
+//   - budget_ID: string - Unique identifier of the budget category
 //
 // Returns:
-//   - models.DisplayBudgetCategory: A budget category response
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
+//   - models.DisplayBudgetCategory: Detailed budget category information containing:
+//     * ID: Unique identifier of the budget category
+//     * Name: Name of the budget category
+//     * Description: Detailed description
+//     * CreatedAt: Timestamp of record creation
+//     * UpdatedAt: Timestamp of last update
+//   - error: nil on successful retrieval, or an error describing the failure:
+//     * ErrInvalidID: When budget_ID format is invalid
+//     * ErrNotFound: When budget category does not exist
+//     * ErrDatabaseOperation: When retrieval operation fails
+//
+// Example usage:
+//
+//	category, err := GetBudgetCategory(123, "456")
+//	if err != nil {
+//	    return nil, fmt.Errorf("failed to fetch budget category: %w", err)
+//	}
 func GetBudgetCategory(barangay_ID uint, budget_ID string) (models.DisplayBudgetCategory, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
