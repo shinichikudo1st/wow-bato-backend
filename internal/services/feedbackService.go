@@ -169,7 +169,7 @@ func EditFeedback(feedbackID string, editedFeedback models.NewFeedback) error {
 	}
 
 	var feedback models.Feedback
-	if err := db.Model(&models.Feedback{}).Where("id = ?", feedbackID_int).First(&feedback).Error; err != nil {
+	if err := db.Where("id = ?", feedbackID_int).First(&feedback).Error; err != nil {
 		return err
 	}
 
@@ -213,7 +213,7 @@ func DeleteFeedback(feedbackID string) error {
 	}
 
 	var feedback models.Feedback
-	if err := db.Model(&models.Feedback{}).Where("id = ?", feedbackID_int).Delete(&feedback).Error; err != nil {
+	if err := db.Where("id = ?", feedbackID_int).Delete(&feedback).Error; err != nil {
 		return err
 	}
 
