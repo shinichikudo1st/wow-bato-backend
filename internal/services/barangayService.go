@@ -144,9 +144,18 @@ func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) er
 		return err
 	}
 
-	barangay.Name = barangayUpdate.Name
-	barangay.City = barangayUpdate.City
-	barangay.Region = barangayUpdate.Region
+
+	if barangayUpdate.Name != "" {
+		barangay.Name = barangayUpdate.Name
+	}
+
+	if barangayUpdate.City != "" {
+		barangay.City = barangayUpdate.City
+	}
+	
+	if barangayUpdate.Region != "" {
+		barangay.Region = barangayUpdate.Region
+	}
 
 	result := db.Save(&barangay)
 
