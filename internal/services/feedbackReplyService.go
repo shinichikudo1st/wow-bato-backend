@@ -107,7 +107,7 @@ func GetAllReplies(feedbackID string) ([]models.FeedbackReply, error) {
 	}
 
 	var replies []models.FeedbackReply
-	if err := db.Where("id = ?", feedbackID_int).Find(&replies).Error; err != nil {
+	if err := db.Where("feedback_ID = ?", feedbackID_int).Find(&replies).Error; err != nil {
 		return []models.FeedbackReply{}, err
 	}
 
