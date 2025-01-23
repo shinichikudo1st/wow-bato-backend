@@ -191,7 +191,9 @@ func EditFeedbackReply(replyID string, content string) error {
 		return err
 	}
 
-	reply.Content = content
+	if content != "" {
+		reply.Content = content
+	}
 
 	result := db.Save(&reply)
 
