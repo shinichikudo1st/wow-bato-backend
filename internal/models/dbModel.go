@@ -90,6 +90,3 @@ type FeedbackReply struct {
 	User User `gorm:"foreignKey:UserID"`
 }
 
-type Audit_Log struct {
-	gorm.Model
-}
