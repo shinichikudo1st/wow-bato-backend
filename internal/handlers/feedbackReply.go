@@ -18,7 +18,7 @@ import (
 )
 
 // CreateFeedbackReply handles the creation and initialization of a new feedback reply
-// 
+//
 // This handler performs the following operations:
 //  1. Validates user authentication and authorization
 //  2. Validates and binds the feedback ID and new reply data
@@ -191,10 +191,17 @@ func EditFeedbackReply(c *gin.Context){
         return
     }
 
-    var editReply models.Reply
+    var editReply models.EditReply
     if err := c.ShouldBindJSON(&editReply); err != nil {
         c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
+    }
+
+    requestingID := editReply.UserID
+    sessionID := session.Get("user_id").(uint)
+
+    if requestingID != sessionID {
+        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Invalid User ID/ Unauthorized"})
     }
 
     replyID := c.Param("replyID")
