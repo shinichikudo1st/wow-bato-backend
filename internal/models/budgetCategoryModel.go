@@ -17,6 +17,7 @@ type BudgetCategoryResponse struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Barangay_ID uint   `json:"barangay_ID"`
+	ProjectCount int64  `json:"project_count"`
 }
 
 // Display projects inside BudgetCategoryList

@@ -195,8 +195,10 @@ func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]mode
 
 	var budgetCategory []models.BudgetCategoryResponse
 	result := db.Model(&models.Budget_Category{}).
-		Select("id, name, description, barangay_ID").
-		Where("barangay_ID = ?", barangay_ID_int).
+		Select("budget_categories.id, budget_categories.name, budget_categories.description, budget_categories.barangay_ID, COUNT(projects.id) as project_count").
+		Joins("LEFT JOIN projects ON projects.category_id = budget_categories.id").
+		Where("budget_categories.barangay_ID = ?", barangay_ID_int).
+		Group("budget_categories.id").
 		Limit(limitInt).
 		Offset(offset).
 		Scan(&budgetCategory)
