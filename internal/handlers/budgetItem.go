@@ -17,7 +17,7 @@ func AddNewBudgetItem(c *gin.Context){
 		return
 	}
 
-	categoryID := c.Param("categoryID")
+	projectID := c.Param("projectID")
 
 	var budgetItem models.NewBudgetItem
 	if err := c.ShouldBindJSON(&budgetItem); err != nil {
@@ -25,7 +25,7 @@ func AddNewBudgetItem(c *gin.Context){
 		return
 	}
 
-	err := services.AddBudgetItem(categoryID, budgetItem)
+	err := services.AddBudgetItem(projectID, budgetItem)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

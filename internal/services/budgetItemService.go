@@ -12,25 +12,25 @@ import (
 //
 // This function performs the following operations:
 // 1. Establishes a database connection
-// 2. Converts the categoryID from string to int
+// 2. Converts the projectID from string to int
 // 3. Creates a new budget item record in the database
 // 4. Returns nil if successful, otherwise returns an error
 //
 // Parameters:
-//   - categoryID: string - The category ID of the budget item
+//   - projectID: string - The category ID of the budget item
 //   - budgetItem: models.NewBudgetItem - The new budget item data
 //
 // Returns:
 //   - error: Returns nil if successful, otherwise returns an error:
 //   - Database connection errors
 //   - Database creation errors
-func AddBudgetItem(categoryID string, budgetItem models.NewBudgetItem) error {
+func AddBudgetItem(projectID string, budgetItem models.NewBudgetItem) error {
 	db, err := database.ConnectDB()
 	if err != nil {
 		return err
 	}
 
-	categoryID_int, err := strconv.Atoi(categoryID)
+	projectID_int, err := strconv.Atoi(projectID)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func AddBudgetItem(categoryID string, budgetItem models.NewBudgetItem) error {
 		Amount_Allocated: budgetItem.Amount_Allocated,
 		Description:      budgetItem.Description,
 		Status:           budgetItem.Status,
-		CategoryID:       uint(categoryID_int),
+		ProjectID:       uint(projectID_int),
 	}
 
 	result := db.Create(&newBudgetItem)

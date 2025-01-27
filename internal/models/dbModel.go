@@ -65,7 +65,7 @@ type Budget_Item struct {
 	Description 		string `gorm:"type:text"`
 	Status 				string `gorm:"not null"` //pending, approved, rejected
 	Approval_Date 		*time.Time //Nullable, set when approved
-	CategoryID 			uint `gorm:"not null"`
+	CategoryID 			uint `gorm:"default:null"`
 	Category 			Budget_Category `gorm:"foreignKey:CategoryID"`
 	ProjectID 			uint `gorm:"not null"`
 	Project 			Project `gorm:"foreignKey:ProjectID"`
