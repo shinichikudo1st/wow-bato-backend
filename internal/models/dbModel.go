@@ -39,7 +39,6 @@ type Budget_Category struct {
 	Description 		string `gorm:"type:text"`
 	Barangay_ID 			uint   `gorm:"not null"`
 	Barangay 			Barangay `gorm:"foreignKey:Barangay_ID"`
-	Budget_Items 		[]Budget_Item `gorm:"foreignKey:CategoryID"`
 	Projects 			[]Project `gorm:"foreignKey:CategoryID"`
 }
 
@@ -65,8 +64,6 @@ type Budget_Item struct {
 	Description 		string `gorm:"type:text"`
 	Status 				string `gorm:"not null"` //pending, approved, rejected
 	Approval_Date 		*time.Time //Nullable, set when approved
-	CategoryID 			uint `gorm:"default:null"`
-	Category 			Budget_Category `gorm:"foreignKey:CategoryID"`
 	ProjectID 			uint `gorm:"not null"`
 	Project 			Project `gorm:"foreignKey:ProjectID"`
 }
@@ -90,4 +87,3 @@ type FeedbackReply struct {
 	UserID uint `gorm:"not null"`
 	User User `gorm:"foreignKey:UserID"`
 }
-
