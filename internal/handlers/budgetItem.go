@@ -64,6 +64,29 @@ func AddNewBudgetItem(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Budget Item Added"})
 }
 
+//	GetAllBudgetItem handles the retrieval for budget items based on the filter
+//
+//	This handlers performs the following operations:
+//		1. Validates user authentication and authorization
+//		2. Collects the necessary URL parameter(projectID) and Query parameters(filter and page)
+//		3. Delegates budget item retrieval to the services layer
+//		4. Returns budget item slices response as JSON data to client
+//
+//	Security:
+//		- Requires authenticated session
+//		- Validates administrative privileges
+//
+//	@Summary Retrieves budget item
+//	@Description Retrieves budget items based on the page and filter
+//	@Tags Budget Item
+//	@No accepted json
+//	@Produce json
+//	@Param Query param: page and filter, Path param: projectID
+//	@Success 200 {object} gin.H "Returns success message and budget item slices as json on budget item retrieval"
+//	@Failure 400 {object} gin.H "Returns error when request validation fails"
+//	@Failure 401 {object} gin.H "Returns error when user is not authenticated"
+//	@Failure 500 {object} gin.H "Returns error when budget retrieval fails"
+//	@Router /budgetItem [get]
 func GetAllBudgetItem(c *gin.Context){
 	session := sessions.Default(c)
 
