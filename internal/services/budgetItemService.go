@@ -63,7 +63,7 @@ func AddBudgetItem(projectID string, budgetItem models.NewBudgetItem) error {
 // Returns:
 //   - []models.Budget_Item: Returns the retrieved budget items
 //   - error: Returns nil if successful, otherwise returns an error
-func GetAllBudgetItem(projectID string, filter string) ([]models.Budget_Item, error) {
+func GetAllBudgetItem(projectID string, filter string, page string) ([]models.Budget_Item, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
 		return []models.Budget_Item{}, err
@@ -74,8 +74,17 @@ func GetAllBudgetItem(projectID string, filter string) ([]models.Budget_Item, er
 		return []models.Budget_Item{}, err
 	}
 
+	page_int, err := strconv.Atoi(page)
+	if err != nil {
+		return []models.Budget_Item{}, err
+	}
+
+	limit := 5 // temporary hardcoded
+
+	offset := (page_int - 1) * limit
+
 	var budgetItem []models.Budget_Item
-	if err := db.Where("ProjectID = ? AND status = ?", projectID_int, filter).Find(&budgetItem).Error; err != nil {
+	if err := db.Where("ProjectID = ? AND status = ?", projectID_int, filter).Find(&budgetItem).Limit(limit).Offset(offset).Error; err != nil {
 		return []models.Budget_Item{}, err
 	}
 

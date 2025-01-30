@@ -74,8 +74,9 @@ func GetAllBudgetItem(c *gin.Context){
 
 	projectID := c.Param("projectID")
 	filter := c.Query("filter")
+	page := c.Query("page")
 
-	budgetItem, err := services.GetAllBudgetItem(projectID, filter)
+	budgetItem, err := services.GetAllBudgetItem(projectID, filter, page)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
