@@ -91,6 +91,38 @@ func GetAllBudgetItem(projectID string, filter string, page string) ([]models.Bu
 	return budgetItem, nil
 }
 
+// CountBudgetItem returns the total count of items that belongs to that project_id
+// This function performs the following operations:
+// 1. Establishes a database connection
+// 2. Converts the projectID from string to int
+// 3. Counts the budget item that belongs to that projectID
+// 4. Returns the budget item count and nil if successful, otherwise returns an error
+//
+// Parameters:
+//   - projectID: string - The project ID of the budget item
+//
+// Returns:
+//   - count of budget item
+//   - error: Returns nil if successful, otherwise returns an error
+func CountBudgetItem(projectID string) (int64, error) {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return 0, err
+	}
+
+	projectID_int, err := strconv.Atoi(projectID)
+	if err != nil {
+		return 0, err
+	}
+
+	var count int64
+	if err := db.Model(&models.Budget_Item{}).Where("project_id = ?", projectID_int).Count(&count).Error; err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 // GetSingleBudgetItem retrieves a single budget item from the database
 //
 // This function performs the following operations:
