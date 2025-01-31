@@ -9,6 +9,7 @@ package handlers
 
 import (
 	"net/http"
+	"sync"
 	"wow-bato-backend/internal/models"
 	"wow-bato-backend/internal/services"
 
@@ -64,20 +65,21 @@ func AddNewBudgetItem(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Budget Item Added"})
 }
 
-//	GetAllBudgetItem handles the retrieval for budget items based on the filter
+//	GetAllBudgetItem handles the retrieval for budget items and count based on the filter
 //
 //	This handlers performs the following operations:
 //		1. Validates user authentication and authorization
 //		2. Collects the necessary URL parameter(projectID) and Query parameters(filter and page)
 //		3. Delegates budget item retrieval to the services layer
-//		4. Returns budget item slices response as JSON data to client
+//		4. Delegates counting of budget items to the services layer
+//		5. Returns budget item slices response as JSON data to client
 //
 //	Security:
 //		- Requires authenticated session
 //		- Validates administrative privileges
 //
 //	@Summary Retrieves budget item
-//	@Description Retrieves budget items based on the page and filter
+//	@Description Retrieves budget items and count based on the page and filter
 //	@Tags Budget Item
 //	@No accepted json
 //	@Produce json
@@ -99,14 +101,52 @@ func GetAllBudgetItem(c *gin.Context){
 	filter := c.Query("filter")
 	page := c.Query("page")
 
-	budgetItem, err := services.GetAllBudgetItem(projectID, filter, page)
+	var (
+		budgetItems []models.Budget_Item
+		count		int64
+		errors		[]error
+	)
 
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	wg.Add(2)
+
+	go func ()  {
+		defer wg.Done()
+		result, err := services.GetAllBudgetItem(projectID, filter, page)
+		if err != nil {
+			mu.Lock()
+			errors = append(errors, err)
+			mu.Unlock()
+			return
+		}
+		mu.Lock()
+		budgetItems = result
+		mu.Unlock()
+	}()
+
+	go func () {
+		defer wg.Done()
+		result, err := services.CountBudgetItem(projectID)
+		if err != nil {
+			mu.Lock()
+			errors = append(errors, err)
+			mu.Unlock()
+			return
+		}
+		mu.Lock()
+		count = result
+		mu.Unlock()
+	}()
+
+	wg.Wait()
+
+	if len(errors) > 0 {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": errors[0].Error()})
 		return
 	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItem})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItems, "count": count})
 }
 
 func GetSingleBudgetItem(c *gin.Context){
