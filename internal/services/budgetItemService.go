@@ -83,7 +83,16 @@ func GetAllBudgetItem(projectID string, filter string, page string) ([]models.Bu
 
 	offset := (page_int - 1) * limit
 
+
 	var budgetItem []models.Budget_Item
+	if filter == "All" {
+		if err := db.Where("project_id = ?", projectID_int).Find(&budgetItem).Limit(limit).Offset(offset).Error; err != nil {
+			return []models.Budget_Item{}, err
+		}
+
+		return budgetItem, nil
+	}
+
 	if err := db.Where("project_id = ? AND status = ?", projectID_int, filter).Find(&budgetItem).Limit(limit).Offset(offset).Error; err != nil {
 		return []models.Budget_Item{}, err
 	}
