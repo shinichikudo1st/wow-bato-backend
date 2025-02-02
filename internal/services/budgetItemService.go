@@ -193,6 +193,13 @@ func UpdateBudgetItemStatus(budgetItemID string, newStatus models.UpdateStatus) 
 		return err
 	}
 
+	var updateStatus string
+	if newStatus.Status == "approve" {
+		updateStatus = "Approved"
+	} else if newStatus.Status == "reject" {
+		updateStatus = "Rejected"
+	}
+
 	budgetItemID_int, err := strconv.Atoi(budgetItemID)
 	if err != nil {
 		return err
@@ -203,7 +210,7 @@ func UpdateBudgetItemStatus(budgetItemID string, newStatus models.UpdateStatus) 
 		return err
 	}
 
-	budgetItem.Status = newStatus.Status
+	budgetItem.Status = updateStatus
 
 	result := db.Save(&budgetItem)
 
