@@ -149,6 +149,29 @@ func GetAllBudgetItem(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItems, "count": count})
 }
 
+//	GetSingleBudgetItem handles the retrieval for a single budget item based on the budgetItemID
+//
+//	This handlers performs the following operations:
+//		1. Validates user authentication and authorization
+//		2. Collects the necessary URL parameter(budgetItemID)
+//		3. Delegates budget item retrieval to the services layer
+//		4. Returns as single budget item response as JSON data to client
+//
+//	Security:
+//		- Requires authenticated session
+//		- Validates administrative privileges
+//
+//	@Summary Retrieves a single budget item
+//	@Description Retrieves a single budget item based on the path parameter budgetItemID
+//	@Tags Budget Item
+//	@No accepted json body
+//	@Produce json
+//	@Param Path param: budgetItemID
+//	@Success 200 {object} gin.H "Returns success message and the single budget item as json on budget item retrieval"
+//	@Failure 400 {object} gin.H "Returns error when request validation fails"
+//	@Failure 401 {object} gin.H "Returns error when user is not authenticated"
+//	@Failure 500 {object} gin.H "Returns error when budget item retrieval fails"
+//	@Router /budgetItem [get]
 func GetSingleBudgetItem(c *gin.Context){
 	session := sessions.Default(c)
 
@@ -170,6 +193,29 @@ func GetSingleBudgetItem(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItem})
 }
 
+//	UpdateStatusBudgetItem handles the updating of status from pending to rejected or approved
+//
+//	This handlers performs the following operations:
+//		1. Validates user authentication and authorization
+//		2. Collects the necessary URL parameter(budgetItemID)
+//		3. Delegates budget item update to the services layer
+//		4. Returns success message response as JSON data to client
+//
+//	Security:
+//		- Requires authenticated session
+//		- Validates administrative privileges
+//
+//	@Summary Update budget item status
+//	@Description Updates budget item status eg. Pending to Approve or Rejected
+//	@Tags Budget Item
+//	@Accepted json
+//	@Produce json
+//	@Param Path param: budgetItemID
+//	@Success 200 {object} gin.H "Returns success message as json on budget item update"
+//	@Failure 400 {object} gin.H "Returns error when request validation fails"
+//	@Failure 401 {object} gin.H "Returns error when user is not authenticated"
+//	@Failure 500 {object} gin.H "Returns error when budget item update fails"
+//	@Router /budgetItem [put]
 func UpdateStatusBudgetItem(c *gin.Context){
 	session := sessions.Default(c)
 
