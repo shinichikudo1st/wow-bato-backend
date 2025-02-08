@@ -216,3 +216,21 @@ func UpdateBudgetItemStatus(budgetItemID string, newStatus models.UpdateStatus) 
 
 	return result.Error
 }
+
+func DeleteBudgetItem(budgetItemID string) error {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return err
+	}
+
+	budgetItemID_int, err := strconv.Atoi(budgetItemID)
+	if err != nil {
+		return err
+	}
+
+	if err := db.Where("id = ?", budgetItemID_int).Delete(&models.Budget_Item{}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
