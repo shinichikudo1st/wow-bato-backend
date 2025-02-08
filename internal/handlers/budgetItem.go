@@ -239,5 +239,26 @@ func UpdateStatusBudgetItem(c *gin.Context){
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Item"})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Item Updated"})
+}
+
+
+func DeleteBudgetItem(c *gin.Context){
+	session := sessions.Default(c)
+
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+		return
+	}
+
+	budgetItemID := c.Param("budgetItemID")
+
+	err := services.DeleteBudgetItem(budgetItemID)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Item Deleted"})
 }

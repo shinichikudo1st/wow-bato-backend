@@ -20,5 +20,6 @@ func RegisterBudgetItemRoutes(router *gin.RouterGroup) {
 		budgetItem.GET("/all/:projectID", handlers.GetAllBudgetItem)
 		budgetItem.GET("/:projectID/:budgetItemID", handlers.GetSingleBudgetItem)
 		budgetItem.PUT("/update-status/:budgetItemID", handlers.UpdateStatusBudgetItem)
+		budgetItem.DELETE("/delete/:budgetItemID")
 	}
 }
