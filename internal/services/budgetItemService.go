@@ -217,6 +217,20 @@ func UpdateBudgetItemStatus(budgetItemID string, newStatus models.UpdateStatus) 
 	return result.Error
 }
 
+// DeleteBudgetItem deletes a budget item in the database
+//
+// This function performs the following operations:
+// 1. Establishes a database connection
+// 2. Converts the budgetItemID from string to int
+// 3. Deletes the budget item record from the database that matches the budgetItemID
+// 4. Returns nil if successful, otherwise returns an error
+//
+// Parameters:
+//   - budgetItemID: string - The ID of the budget item
+//
+// Returns:
+//   - error: Returns nil if successful, otherwise returns an error
+//   - Database connection errors
 func DeleteBudgetItem(budgetItemID string) error {
 	db, err := database.ConnectDB()
 	if err != nil {
