@@ -242,7 +242,29 @@ func UpdateStatusBudgetItem(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Item Updated"})
 }
 
-
+//	DeleteBudgetItem handles the deletion for a single budget item based on the budgetItemID
+//
+//	This handlers performs the following operations:
+//		1. Validates user authentication and authorization
+//		2. Collects the necessary URL parameter(budgetItemID)
+//		3. Delegates budget item deletion to the services layer
+//		4. Returns a message of successful deletion of budget item response as JSON data to client
+//
+//	Security:
+//		- Requires authenticated session
+//		- Validates administrative privileges
+//
+//	@Summary Deletes a single budget item
+//	@Description Deletes a single budget item based on the path parameter budgetItemID
+//	@Tags Budget Item
+//	@No accepted json body
+//	@Produce json
+//	@Param Path param: budgetItemID
+//	@Success 200 {object} gin.H "Returns success message for the deletion as json on budget item retrieval"
+//	@Failure 400 {object} gin.H "Returns error when request validation fails"
+//	@Failure 401 {object} gin.H "Returns error when user is not authenticated"
+//	@Failure 500 {object} gin.H "Returns error when budget item deletion fails"
+//	@Router /budgetItem [delete]
 func DeleteBudgetItem(c *gin.Context){
 	session := sessions.Default(c)
 
