@@ -9,7 +9,11 @@
 // security best practices and OWASP guidelines.
 package services
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"errors"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 // HashPassword securely hashes a password using the bcrypt algorithm.
 //
@@ -23,8 +27,8 @@ import "golang.org/x/crypto/bcrypt"
 // Returns:
 //   - string: The securely hashed password (60 characters long)
 //   - error: nil on successful hashing, or an error describing the failure:
-//     * ErrInvalidPassword: When password is empty
-//     * ErrHashingFailed: When hashing operation fails
+//   - ErrInvalidPassword: When password is empty
+//   - ErrHashingFailed: When hashing operation fails
 //
 // Example usage:
 //
@@ -33,6 +37,9 @@ import "golang.org/x/crypto/bcrypt"
 //	    return fmt.Errorf("password hashing failed: %w", err)
 //	}
 func HashPassword(password string) (string, error) {
+	if password == "" {
+		return "", errors.New("password cannot be empty")
+	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(hashedPassword), err
 }
@@ -50,8 +57,8 @@ func HashPassword(password string) (string, error) {
 //
 // Returns:
 //   - bool: true if passwords match, false otherwise
-//     * true: Password is correct
-//     * false: Password is incorrect or an error occurred
+//   - true: Password is correct
+//   - false: Password is incorrect or an error occurred
 //
 // Example usage:
 //
