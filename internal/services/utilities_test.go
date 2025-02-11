@@ -74,3 +74,91 @@ func TestHashPassword(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckPassword(t *testing.T) {
+	// Create some test passwords and their hashes
+	testCases := []struct {
+		name        string
+		password    string
+		inputPass   string
+		wantMatch   bool
+		setupHash   bool // if true, we'll create a hash first
+	}{
+		{
+			name:      "Correct Password",
+			password:  "mySecurePassword123",
+			inputPass: "mySecurePassword123",
+			wantMatch: true,
+			setupHash: true,
+		},
+		{
+			name:      "Incorrect Password",
+			password:  "mySecurePassword123",
+			inputPass: "wrongPassword123",
+			wantMatch: false,
+			setupHash: true,
+		},
+		{
+			name:      "Empty Password",
+			password:  "mySecurePassword123",
+			inputPass: "",
+			wantMatch: false,
+			setupHash: true,
+		},
+		{
+			name:      "Empty Hash",
+			password:  "mySecurePassword123",
+			inputPass: "mySecurePassword123",
+			wantMatch: false,
+			setupHash: false, // don't create hash, use empty string
+		},
+		{
+			name:      "Case Sensitive Check",
+			password:  "mySecurePassword123",
+			inputPass: "MySecurePassword123",
+			wantMatch: false,
+			setupHash: true,
+		},
+		{
+			name:      "With Special Characters",
+			password:  "my!@#$%^&*()Pass",
+			inputPass: "my!@#$%^&*()Pass",
+			wantMatch: true,
+			setupHash: true,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var hashedPassword string
+			if tt.setupHash {
+				var err error
+				hashedPassword, err = HashPassword(tt.password)
+				if err != nil {
+					t.Fatalf("Failed to create hash for test: %v", err)
+				}
+			}
+
+			// Test password verification
+			got := CheckPassword(hashedPassword, tt.inputPass)
+			if got != tt.wantMatch {
+				t.Errorf("CheckPassword() = %v, want %v", got, tt.wantMatch)
+			}
+
+			// Additional security checks for matching passwords
+			if tt.wantMatch && tt.setupHash {
+				// Verify that the function is consistent
+				secondCheck := CheckPassword(hashedPassword, tt.inputPass)
+				if !secondCheck {
+					t.Error("CheckPassword() not consistent between calls")
+				}
+
+				// Verify that adding extra characters fails
+				extraChar := CheckPassword(hashedPassword, tt.inputPass+"extra")
+				if extraChar {
+					t.Error("CheckPassword() accepted password with extra characters")
+				}
+			}
+		})
+	}
+}
