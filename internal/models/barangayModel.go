@@ -31,3 +31,11 @@ type OptionBarangay struct {
     ID      uint `json:"id"`
     Name    string `json:"name"`
 }
+
+type PublicBarangayDisplay struct {
+    ID uint `json:"id"`
+    Name string `json:"name"`
+    City string `json:"city"`
+    Region string `json:"region"`
+    ImageURL string `json:"image_url"`
+}

@@ -285,3 +285,16 @@ func GetBarangayOptions(c *gin.Context){
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Barangays found", "data": barangay})
 }
+
+func GetPublicBarangay(c *gin.Context){
+
+    barangays, err := services.AllBarangaysPublic()
+
+    if err != nil {
+        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+
+    c.IndentedJSON(http.StatusOK, gin.H{"message": "All barangays retrieved","data": barangays})
+}

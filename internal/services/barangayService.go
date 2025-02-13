@@ -290,3 +290,17 @@ func GetSingleBarangay(barangay_ID string) (models.AllBarangayResponse, error) {
 
 	return barangay, nil
 }
+
+func AllBarangaysPublic()([]models.PublicBarangayDisplay, error){
+    db, err := database.ConnectDB()
+    if err != nil {
+        return []models.PublicBarangayDisplay{}, err
+	}
+
+    var barangays []models.PublicBarangayDisplay
+    if err := db.Find(&barangays).Error; err != nil {
+       return []models.PublicBarangayDisplay{}, err
+    }
+
+    return barangays, nil
+}

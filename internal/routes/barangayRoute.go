@@ -24,5 +24,6 @@ func RegisterBarangayRoute(router *gin.RouterGroup) {
 		barangay.GET("/all", handlers.GetAllBarangay)
 		barangay.GET("/single/:barangay_ID", handlers.GetSingleBarangay)
 		barangay.GET("/options", handlers.GetBarangayOptions)
+        barangay.GET("/public-all", handlers.GetPublicBarangay)
 	}
 }
