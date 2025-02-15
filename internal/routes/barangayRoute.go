@@ -15,6 +15,7 @@ import (
 // - GET /barangay/all: Handles retrieving a list of barangays.
 // - GET /barangay/single/:barangay_ID: Handles retrieving a single barangay.
 // - GET /barangay/options: Handles retrieving barangay used for dropdown selection
+// - GET /public-all: Handles retriving all barangays to display to users without authorization
 func RegisterBarangayRoute(router *gin.RouterGroup) {
 	barangay := router.Group("/barangay")
 	{

@@ -286,6 +286,19 @@ func GetBarangayOptions(c *gin.Context){
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Barangays found", "data": barangay})
 }
 
+// GetPublicBarangay provides a simplified list of barangays for UI components.
+//
+// This handler performs the following operations:
+//  1. Fetching of barangays publicly for non authorized user
+//
+// @Summary GetPublicBarangay get all barangay publicly
+// @Description Retrieves a simplified list of barangays for non authorized requests
+// @Tags Barangay
+// @Accept json
+// @Produce json
+// @Success 200 {object} gin.H "Returns list of barangay"
+// @Failure 500 {object} gin.H "Returns error when retrieval fails"
+// @Router /barangay/public-all [get]
 func GetPublicBarangay(c *gin.Context){
 
     barangays, err := services.AllBarangaysPublic()
