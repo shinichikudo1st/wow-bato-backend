@@ -302,3 +302,22 @@ func UpdateProjectStatus(projectID string, barangay_ID uint, newStatus models.Ne
 
 	}
 }
+
+func GetProjectSingle(projectID string)(models.ProjectList, error){
+	db, err := database.ConnectDB()
+	if err != nil {
+		return models.ProjectList{}, err
+	}
+
+	projectID_int, err := strconv.Atoi(projectID)
+	if err != nil {
+		return models.ProjectList{}, err
+	}
+
+	var project models.ProjectList
+	if err := db.Where("id = ?", projectID_int).First(&project).Error; err != nil {
+		return models.ProjectList{}, err
+	}
+
+	return project, nil
+}
