@@ -315,7 +315,7 @@ func GetProjectSingle(projectID string)(models.ProjectList, error){
 	}
 
 	var project models.ProjectList
-	if err := db.Where("id = ?", projectID_int).First(&project).Error; err != nil {
+	if err := db.Model(&models.Project{}).Where("id = ?", projectID_int).First(&project).Error; err != nil {
 		return models.ProjectList{}, err
 	}
 

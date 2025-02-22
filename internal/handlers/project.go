@@ -309,3 +309,21 @@ func UpdateProjectStatus(c *gin.Context){
         return
     }
 }
+
+func GetSingleProject(c *gin.Context){
+	session := sessions.Default(c)
+	if session.Get("authenticated") != true {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
+        return 
+	}
+
+	projectID := c.Param("projectID")
+
+	project, err := services.GetProjectSingle(projectID)
+	if err != nil {
+        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+	c.IndentedJSON(http.StatusOK, gin.H{"data": project, "message": "Project " + project.Name +" Retrieved"})
+}

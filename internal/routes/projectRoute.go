@@ -20,5 +20,6 @@ func RegisterProjectRoutes(router *gin.RouterGroup) {
 		project.DELETE("/delete/:projectID", handlers.DeleteProject)
 		project.GET("/all/:categoryID", handlers.GetAllProjects)
 		project.PATCH("/update-status/:projectID", handlers.UpdateProjectStatus)
+		project.GET("/specific-project/:projectID", handlers.GetSingleProject)
 	}
 }
