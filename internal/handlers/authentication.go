@@ -106,7 +106,8 @@ func LoginUser(c *gin.Context){
 	}
 	
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "sessionStatus": session.Get("authenticated")})
+    c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "sessionStatus": session.Get("authenticated"), "role": session.Get("user_role")})
+
 }
 
 // LogoutUser handles user session termination and cleanup.
