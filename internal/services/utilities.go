@@ -98,9 +98,12 @@ func CheckServiceError(c *gin.Context, err error){
 	}
 }
 
-func CheckAuthentication(c *gin.Context, session sessions.Session){
+func CheckAuthentication(c *gin.Context) sessions.Session{
+	session := sessions.Default(c)
 	if session.Get("authenticated") != true {
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
+		return nil
 	}
+
+	return session
 }

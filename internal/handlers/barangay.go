@@ -15,7 +15,6 @@ import (
 	"wow-bato-backend/internal/models"
 	"wow-bato-backend/internal/services"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -44,8 +43,7 @@ import (
 // @Router /barangay [post]
 func AddBarangay(c *gin.Context) {
 
-	session := sessions.Default(c)
-	services.CheckAuthentication(c, session)
+	services.CheckAuthentication(c)
 
 	var newBarangay models.AddBarangay
 	services.BindJSON(c, &newBarangay)
@@ -83,8 +81,7 @@ func AddBarangay(c *gin.Context) {
 // @Router /barangay [get]
 func GetAllBarangay(c *gin.Context){
 
-	session := sessions.Default(c)
-	services.CheckAuthentication(c, session)
+	services.CheckAuthentication(c)
 
 	page := c.Query("page")
 	limit := c.Query("limit")
@@ -122,8 +119,7 @@ func GetAllBarangay(c *gin.Context){
 // @Router /barangay/{barangayID} [get]
 func GetSingleBarangay(c *gin.Context){
 
-	session := sessions.Default(c)
-	services.CheckAuthentication(c, session)
+	services.CheckAuthentication(c)
 
 	barangay_ID := c.Param("barangay_ID")
 
@@ -159,8 +155,7 @@ func GetSingleBarangay(c *gin.Context){
 // @Router /barangay/{barangayID} [delete]
 func DeleteBarangay(c *gin.Context) {
 
-	session := sessions.Default(c)
-	services.CheckAuthentication(c, session)
+	services.CheckAuthentication(c)
 
 	barangay_ID := c.Param("barangay_ID")
 
@@ -197,8 +192,7 @@ func DeleteBarangay(c *gin.Context) {
 // @Router /barangay/{barangayID} [put]
 func UpdateBarangay(c *gin.Context) {
 
-	session := sessions.Default(c)
-	services.CheckAuthentication(c, session)
+	services.CheckAuthentication(c)
 
 	barangay_ID := c.Param("barangay_ID")
 

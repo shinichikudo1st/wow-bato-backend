@@ -140,9 +140,9 @@ func LogoutUser(c *gin.Context){
 // @Failure 500 {object} gin.H "Returns error when session verification fails"
 // @Router /check-auth [get]
 func CheckAuth(c *gin.Context){
-	session := sessions.Default(c)
+	
 
-	services.CheckAuthentication(c, session)
+	session := services.CheckAuthentication(c)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated"), "role": session.Get("user_role"), 
 	"user_id": session.Get("user_id"), "barangay_id": session.Get("barangay_id"), "barangay_name": session.Get("barangay_name")})
@@ -169,9 +169,8 @@ func CheckAuth(c *gin.Context){
 // @Failure 500 {object} gin.H "Returns error when profile retrieval fails"
 // @Router /profile [get]
 func GetUserProfile(c *gin.Context){
-	session := sessions.Default(c)
 
-	services.CheckAuthentication(c, session)
+	session := services.CheckAuthentication(c)
 
 	userID := session.Get("user_id")
 

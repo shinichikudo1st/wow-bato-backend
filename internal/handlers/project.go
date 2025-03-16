@@ -16,7 +16,6 @@ import (
 	"wow-bato-backend/internal/models"
 	"wow-bato-backend/internal/services"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -47,8 +46,7 @@ import (
 // @Router /projects/{categoryID} [post]
 func AddNewProject(c *gin.Context){
 
-	session := sessions.Default(c)
-	services.CheckAuthentication(c, session)
+	session := services.CheckAuthentication(c)
 
 	categoryID := c.Param("categoryID")
 	barangayIDValue := session.Get("barangay_id")
@@ -95,8 +93,7 @@ func AddNewProject(c *gin.Context){
 // @Router /projects/{projectID} [delete]
 func DeleteProject(c *gin.Context){
 
-	session := sessions.Default(c)
-	services.CheckAuthentication(c, session)
+	session := services.CheckAuthentication(c)
 
 	projectID := c.Param("projectID")
 	barangay_ID := session.Get("barangay_ID").(uint)
@@ -134,8 +131,7 @@ func DeleteProject(c *gin.Context){
 // @Router /projects/{projectID} [put]
 func UpdateProject(c *gin.Context){
 
-    session := sessions.Default(c)
-    services.CheckAuthentication(c, session)
+    session := services.CheckAuthentication(c)
 
     projectID := c.Param("projectID")
     barangay_ID := session.Get("barangay_ID").(uint)
@@ -176,8 +172,7 @@ func UpdateProject(c *gin.Context){
 // @Router /projects [get]
 func GetAllProjects(c *gin.Context){
 
-	session := sessions.Default(c)
-	services.CheckAuthentication(c, session)
+	session := services.CheckAuthentication(c)
 	
 	categoryID := c.Param("categoryID")
 	barangay_ID, ok := session.Get("barangay_id").(uint)
@@ -265,8 +260,7 @@ func GetAllProjects(c *gin.Context){
 // @Router /projects/{projectID}/status [put]
 func UpdateProjectStatus(c *gin.Context){
 
-    session := sessions.Default(c)
-    services.CheckAuthentication(c, session)
+    session := services.CheckAuthentication(c)
 
     projectID := c.Param("projectID")
     barangay_ID := session.Get("barangay_ID").(uint)
@@ -280,8 +274,7 @@ func UpdateProjectStatus(c *gin.Context){
 
 func GetSingleProject(c *gin.Context){
 
-	session := sessions.Default(c)
-	services.CheckAuthentication(c, session)
+	services.CheckAuthentication(c)
 
 	projectID := c.Param("projectID")
 

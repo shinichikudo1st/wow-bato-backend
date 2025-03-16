@@ -14,7 +14,6 @@ import (
 
 	"sync"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,7 +24,7 @@ import (
 //		2. Validates and binds the new budget category data
 //		3. Delegates budget category creation to the services layer
 //		4. Returns appropriate response based on operation result
-// 
+//
 //	Security:
 //		- Requires authenticated session
 //		- Validates administrative privileges
@@ -42,26 +41,14 @@ import (
 //	@Failure 500 {object} gin.H "Returns error when budget category creation fails"
 //	@Router /budgetCategory [post]
 func AddBudgetCategory(c *gin.Context){
-	session := sessions.Default(c)
-
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	
+	services.CheckAuthentication(c)
 
 	var newBudgetCategory models.NewBudgetCategory
-
-	if err := c.ShouldBindJSON(&newBudgetCategory); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	services.BindJSON(c, &newBudgetCategory)
 
 	err := services.AddBudgetCategory(newBudgetCategory)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Budget Category Added"})
 }
@@ -90,21 +77,13 @@ func AddBudgetCategory(c *gin.Context){
 //	@Failure 500 {object} gin.H "Returns error when budget category deletion fails"
 //	@Router /budgetCategory/{budget_ID} [delete]
 func DeleteBudgetCategory(c *gin.Context){
-	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	services.CheckAuthentication(c)
 
 	budget_ID := c.Param("budget_ID")
 
 	err := services.DeleteBudgetCategory(budget_ID)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Deleted"})
 }
@@ -134,28 +113,16 @@ func DeleteBudgetCategory(c *gin.Context){
 //	@Failure 500 {object} gin.H "Returns error when budget category update fails"
 //	@Router /budgetCategory/{budget_ID} [put]
 func UpdateBudgetCategory(c *gin.Context){
-	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	services.CheckAuthentication(c)
 
 	budget_ID := c.Param("budget_ID")
 
 	var updateBudgetCategory models.UpdateBudgetCategory
-
-	if err := c.ShouldBindJSON(&updateBudgetCategory); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	services.BindJSON(c, &updateBudgetCategory)
 
 	err := services.UpdateBudgetCategory(budget_ID, updateBudgetCategory)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Updated"})
 }
@@ -185,12 +152,8 @@ func UpdateBudgetCategory(c *gin.Context){
 //	@Failure 500 {object} gin.H "Returns error when retrieval fails"
 //	@Router /budgetCategory [get]
 func GetAllBudgetCategory(c *gin.Context) {
-	session := sessions.Default(c)
-
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	
+	services.CheckAuthentication(c)
 
 	limit := c.Query("limit")
 	page := c.Query("page")
@@ -279,12 +242,8 @@ func GetAllBudgetCategory(c *gin.Context) {
 //	@Failure 500 {object} gin.H "Returns error when budget category retrieval fails"
 //	@Router /budgetCategory/{budget_ID} [get]
 func GetSingleBudgetCategory(c *gin.Context){
-	session := sessions.Default(c)
-
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	
+	session := services.CheckAuthentication(c)
 
 	barangay_ID := session.Get("barangay_id").(uint)
 	budget_ID := c.Param("budget_ID")
