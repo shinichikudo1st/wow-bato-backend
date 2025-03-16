@@ -46,15 +46,13 @@ import (
 // @Failure 500 {object} gin.H "Returns error when project creation fails"
 // @Router /projects/{categoryID} [post]
 func AddNewProject(c *gin.Context){
-	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	session := sessions.Default(c)
+	services.CheckAuthentication(c, session)
 
 	categoryID := c.Param("categoryID")
 	barangayIDValue := session.Get("barangay_id")
+
 	barangay_ID, ok := barangayIDValue.(uint)
 	if !ok {
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Invalid barangay_ID"})
@@ -63,16 +61,10 @@ func AddNewProject(c *gin.Context){
 	
 
 	var newProject models.NewProject
-	if err := c.ShouldBindJSON(&newProject); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	services.BindJSON(c, &newProject)
 
 	err := services.AddNewProject(barangay_ID, categoryID, newProject)
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Project Created"})
 }
@@ -102,21 +94,15 @@ func AddNewProject(c *gin.Context){
 // @Failure 500 {object} gin.H "Returns error when deletion fails"
 // @Router /projects/{projectID} [delete]
 func DeleteProject(c *gin.Context){
-	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	session := sessions.Default(c)
+	services.CheckAuthentication(c, session)
 
 	projectID := c.Param("projectID")
 	barangay_ID := session.Get("barangay_ID").(uint)
 
 	err := services.DeleteProject(barangay_ID, projectID)
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Project Deleted"})
 }
@@ -147,26 +133,18 @@ func DeleteProject(c *gin.Context){
 // @Failure 500 {object} gin.H "Returns error when update fails"
 // @Router /projects/{projectID} [put]
 func UpdateProject(c *gin.Context){
+
     session := sessions.Default(c)
-    if session.Get("authenticated") != true {
-        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-        return
-    }
+    services.CheckAuthentication(c, session)
 
     projectID := c.Param("projectID")
     barangay_ID := session.Get("barangay_ID").(uint)
 
     var updateProject models.UpdateProject
-    if err := c.ShouldBindJSON(&updateProject); err != nil {
-        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+    services.BindJSON(c, &updateProject)
 
     err := services.UpdateProject(barangay_ID, projectID, updateProject)
-    if err != nil {
-        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+    services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Updated Project"})
 }
@@ -197,12 +175,9 @@ func UpdateProject(c *gin.Context){
 // @Failure 500 {object} gin.H "Returns error when retrieval fails"
 // @Router /projects [get]
 func GetAllProjects(c *gin.Context){
-	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	session := sessions.Default(c)
+	services.CheckAuthentication(c, session)
 	
 	categoryID := c.Param("categoryID")
 	barangay_ID, ok := session.Get("barangay_id").(uint)
@@ -210,6 +185,7 @@ func GetAllProjects(c *gin.Context){
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Invalid session data"})
 		return
 	}
+
 	limit := c.Query("limit")
 	page := c.Query("page")
 
@@ -288,42 +264,29 @@ func GetAllProjects(c *gin.Context){
 // @Failure 500 {object} gin.H "Returns error when status update fails"
 // @Router /projects/{projectID}/status [put]
 func UpdateProjectStatus(c *gin.Context){
+
     session := sessions.Default(c)
-    if session.Get("authenticated") != true {
-        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-        return 
-    }
+    services.CheckAuthentication(c, session)
 
     projectID := c.Param("projectID")
     barangay_ID := session.Get("barangay_ID").(uint)
 
     var newStatus models.NewProjectStatus
-    if err := c.ShouldBindJSON(&newStatus); err != nil {
-        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+    services.BindJSON(c, &newStatus)
 
     err := services.UpdateProjectStatus(projectID, barangay_ID, newStatus)
-    if err != nil {
-        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+    services.CheckServiceError(c, err)
 }
 
 func GetSingleProject(c *gin.Context){
+
 	session := sessions.Default(c)
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-        return 
-	}
+	services.CheckAuthentication(c, session)
 
 	projectID := c.Param("projectID")
 
 	project, err := services.GetProjectSingle(projectID)
-	if err != nil {
-        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"data": project, "message": "Project " + project.Name +" Retrieved"})
 }
