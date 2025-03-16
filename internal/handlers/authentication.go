@@ -39,16 +39,13 @@ import (
 func RegisterUser(c *gin.Context) {
 	var registerUser models.RegisterUser
 
-	if err := c.ShouldBindJSON(&registerUser); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if !services.BindJSON(c, &registerUser){
 		return
 	}
 
 	err := services.RegisterUser(registerUser)
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }
@@ -81,29 +78,18 @@ func RegisterUser(c *gin.Context) {
 func LoginUser(c *gin.Context){
 	var loginUser models.LoginUser
 
-	if err := c.ShouldBindJSON(&loginUser); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if !services.BindJSON(c, &loginUser){
 		return
 	}
 
 	user, err := services.LoginUser(loginUser)
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	session := sessions.Default(c)
-	session.Set("user_id", user.ID)
-	session.Set("user_role", user.Role)
-	session.Set("barangay_id", user.Barangay_ID)
-	session.Set("barangay_name", user.Barangay_Name)
-	session.Set("authenticated", true)
-	
+	services.SetSession(session, user)
 
-	if err := session.Save(); err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	err = session.Save()
+	services.CheckServiceError(c, err)
 	
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "sessionStatus": session.Get("authenticated"), "role": session.Get("user_role")})
@@ -131,10 +117,8 @@ func LogoutUser(c *gin.Context){
 
 	session.Clear()
 
-	if err := session.Save(); err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	err := session.Save()
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged out successfully"})
 }
@@ -162,10 +146,7 @@ func LogoutUser(c *gin.Context){
 func CheckAuth(c *gin.Context){
 	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
+	services.CheckAuthentication(c, session)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated"), "role": session.Get("user_role"), 
 	"user_id": session.Get("user_id"), "barangay_id": session.Get("barangay_id"), "barangay_name": session.Get("barangay_name")})
@@ -194,19 +175,13 @@ func CheckAuth(c *gin.Context){
 func GetUserProfile(c *gin.Context){
 	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	services.CheckAuthentication(c, session)
 
 	userID := session.Get("user_id")
 
 	userProfile, err := services.GetUserProfile(userID.(uint))
 
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User profile fetched successfully", "data": userProfile})
 }
