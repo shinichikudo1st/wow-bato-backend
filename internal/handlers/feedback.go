@@ -14,7 +14,6 @@ import (
 	"wow-bato-backend/internal/models"
 	"wow-bato-backend/internal/services"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -42,28 +41,18 @@ import (
 // @Failure 500 {object} gin.H "Returns error message on server error"
 // @Router /feedback/{projectID} [post]
 func CreateFeedBack(c *gin.Context) {
-    session := sessions.Default(c)
-
-    if session.Get("authenticated") != true {
-        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Access Denied: Unauthorized"})
-        return
-    }
+    
+    session := services.CheckAuthentication(c)
 
     var newFeedback models.NewFeedback
-    if err := c.ShouldBindJSON(&newFeedback); err != nil {
-        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+    services.BindJSON(c, &newFeedback)
 
     project_id := c.Param("projectID")
     user_id := session.Get("user_id").(uint)
     user_role := session.Get("user_role").(string)
 
     project_id_int, err := strconv.Atoi(project_id)
-    if err != nil {
-        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+    services.CheckServiceError(c, err)
 
     feedback := models.CreateFeedback{
         Content: newFeedback.Content,
@@ -73,10 +62,7 @@ func CreateFeedBack(c *gin.Context) {
     }
 
     err = services.CreateFeedback(feedback)
-    if err != nil {
-        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+    services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "New feedback created"})
 }
@@ -104,19 +90,13 @@ func CreateFeedBack(c *gin.Context) {
 // @Failure 500 {object} gin.H "Returns error message on server error"
 // @Router /feedback/{projectID} [get]
 func GetAllFeedbacks(c *gin.Context){
-    session := sessions.Default(c)
-
-    if session.Get("authenticated") != true {
-        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Access Denied: Unauthorized"})
-        return
-    }
+    
+    services.CheckAuthentication(c)
 
     projectID := c.Param("projectID")
+
     feedbacks, err := services.GetAllFeedback(projectID)
-    if err != nil {
-        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+    services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"feedbacks": feedbacks})
 
@@ -146,25 +126,16 @@ func GetAllFeedbacks(c *gin.Context){
 // @Failure 500 {object} gin.H "Returns error message on server error"
 // @Router /feedback/{feedbackID} [put]
 func EditFeedback(c *gin.Context){
-    session := sessions.Default(c)
-
-    if session.Get("authenticated") != true {
-        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Access Denied: Unauthorized"})
-        return
-    }
+    
+    services.CheckAuthentication(c)
+    
+    feedbackID := c.Param("feedbackID")
 
     var newFeedback models.NewFeedback
-    if err := c.ShouldBindJSON(&newFeedback); err != nil {
-        c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+    services.BindJSON(c, &newFeedback)
 
-    feedbackID := c.Param("feedbackID")
     err := services.EditFeedback(feedbackID, newFeedback)
-    if err != nil {
-        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+    services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Feedback edited"})
 }
@@ -192,19 +163,13 @@ func EditFeedback(c *gin.Context){
 // @Failure 500 {object} gin.H "Returns error message on server error"
 // @Router /feedback/{feedbackID} [delete]
 func DeleteFeedback(c *gin.Context){
-    session := sessions.Default(c)
 
-    if session.Get("authenticated") != true {
-        c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Access Denied: Unauthorized"})
-        return
-    }
+    services.CheckAuthentication(c)
 
     feedbackID := c.Param("feedbackID")
+
     err := services.DeleteFeedback(feedbackID)
-    if err != nil {
-        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+    services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Feedback deleted"})
 }
