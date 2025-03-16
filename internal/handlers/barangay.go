@@ -43,26 +43,15 @@ import (
 // @Failure 500 {object} gin.H "Returns error when barangay creation fails"
 // @Router /barangay [post]
 func AddBarangay(c *gin.Context) {
-	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	session := sessions.Default(c)
+	services.CheckAuthentication(c, session)
 
 	var newBarangay models.AddBarangay
-
-	if err := c.ShouldBindJSON(&newBarangay); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	services.BindJSON(c, &newBarangay)
 
 	err := services.AddNewBarangay(newBarangay)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully Added New Barangay"})
 
@@ -93,22 +82,15 @@ func AddBarangay(c *gin.Context) {
 // @Failure 500 {object} gin.H "Returns error when retrieval fails"
 // @Router /barangay [get]
 func GetAllBarangay(c *gin.Context){
-	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	session := sessions.Default(c)
+	services.CheckAuthentication(c, session)
 
 	page := c.Query("page")
 	limit := c.Query("limit")
 
 	barangay, err := services.GetAllBarangay(limit, page)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully fetched Barangays", "data": barangay})
 }
@@ -139,21 +121,14 @@ func GetAllBarangay(c *gin.Context){
 // @Failure 500 {object} gin.H "Returns error when retrieval fails"
 // @Router /barangay/{barangayID} [get]
 func GetSingleBarangay(c *gin.Context){
-	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	session := sessions.Default(c)
+	services.CheckAuthentication(c, session)
 
 	barangay_ID := c.Param("barangay_ID")
 
 	barangay, err := services.GetSingleBarangay(barangay_ID)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved specific barangay", "data": barangay})
 }
@@ -183,21 +158,14 @@ func GetSingleBarangay(c *gin.Context){
 // @Failure 500 {object} gin.H "Returns error when deletion fails"
 // @Router /barangay/{barangayID} [delete]
 func DeleteBarangay(c *gin.Context) {
-	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	session := sessions.Default(c)
+	services.CheckAuthentication(c, session)
 
 	barangay_ID := c.Param("barangay_ID")
 
 	err := services.DeleteBarangay(barangay_ID)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully deleted the Barangay"})
 }
@@ -228,28 +196,17 @@ func DeleteBarangay(c *gin.Context) {
 // @Failure 500 {object} gin.H "Returns error when update fails"
 // @Router /barangay/{barangayID} [put]
 func UpdateBarangay(c *gin.Context) {
-	session := sessions.Default(c)
 
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized: Access Denied"})
-		return
-	}
+	session := sessions.Default(c)
+	services.CheckAuthentication(c, session)
 
 	barangay_ID := c.Param("barangay_ID")
 
 	var barangayUpdate models.UpdateBarangay
-
-	if err := c.ShouldBindJSON(&barangayUpdate); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	services.BindJSON(c, &barangayUpdate)
 
 	err := services.UpdateBarangay(barangay_ID, barangayUpdate)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Successfully Updated Barangay"})
 }
@@ -277,11 +234,7 @@ func UpdateBarangay(c *gin.Context) {
 func GetBarangayOptions(c *gin.Context){
    
     barangay, err := services.OptionBarangay()
-
-    if err != nil {
-        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+	services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Barangays found", "data": barangay})
 }
@@ -302,11 +255,7 @@ func GetBarangayOptions(c *gin.Context){
 func GetPublicBarangay(c *gin.Context){
 
     barangays, err := services.AllBarangaysPublic()
-
-    if err != nil {
-        c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+	services.CheckServiceError(c, err)
 
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "All barangays retrieved","data": barangays})

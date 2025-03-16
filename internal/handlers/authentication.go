@@ -39,9 +39,7 @@ import (
 func RegisterUser(c *gin.Context) {
 	var registerUser models.RegisterUser
 
-	if !services.BindJSON(c, &registerUser){
-		return
-	}
+	services.BindJSON(c, &registerUser)
 
 	err := services.RegisterUser(registerUser)
 
@@ -78,9 +76,7 @@ func RegisterUser(c *gin.Context) {
 func LoginUser(c *gin.Context){
 	var loginUser models.LoginUser
 
-	if !services.BindJSON(c, &loginUser){
-		return
-	}
+	services.BindJSON(c, &loginUser)
 
 	user, err := services.LoginUser(loginUser)
 	services.CheckServiceError(c, err)

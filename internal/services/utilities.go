@@ -76,13 +76,11 @@ func CheckPassword(hashedPassword, password string) bool {
 	return err == nil
 }
 
-func BindJSON(c *gin.Context, obj interface{}) bool {
+func BindJSON(c *gin.Context, obj interface{}) {
 	if err := c.ShouldBindJSON(obj); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return false
+		return 
 	}
-
-	return true
 }
 
 func SetSession(session sessions.Session, user models.UserStruct){
