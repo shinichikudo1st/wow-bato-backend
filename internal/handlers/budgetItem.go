@@ -13,7 +13,6 @@ import (
 	"wow-bato-backend/internal/models"
 	"wow-bato-backend/internal/services"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -41,26 +40,16 @@ import (
 //	@Failure 500 {object} gin.H "Returns error when budget item creation fails"
 //	@Router /budgetItem [post]
 func AddNewBudgetItem(c *gin.Context){
-	session := sessions.Default(c)
-
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	
+	services.CheckAuthentication(c)
 
 	projectID := c.Param("projectID")
 
 	var budgetItem models.NewBudgetItem
-	if err := c.ShouldBindJSON(&budgetItem); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	services.BindJSON(c, &budgetItem)
 
 	err := services.AddBudgetItem(projectID, budgetItem)
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Budget Item Added"})
 }
@@ -90,12 +79,8 @@ func AddNewBudgetItem(c *gin.Context){
 //	@Failure 500 {object} gin.H "Returns error when budget retrieval fails"
 //	@Router /budgetItem [get]
 func GetAllBudgetItem(c *gin.Context){
-	session := sessions.Default(c)
-
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	
+	services.CheckAuthentication(c)
 
 	projectID := c.Param("projectID")
 	filter := c.Query("filter")
@@ -173,22 +158,14 @@ func GetAllBudgetItem(c *gin.Context){
 //	@Failure 500 {object} gin.H "Returns error when budget item retrieval fails"
 //	@Router /budgetItem [get]
 func GetSingleBudgetItem(c *gin.Context){
-	session := sessions.Default(c)
-
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	
+	services.CheckAuthentication(c)
 
 	projectID := c.Param("projectID")
 	budgetItemID := c.Param("budgetItemID")
 
 	budgetItem, err := services.GetSingleBudgetItem(projectID, budgetItemID)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItem})
 }
@@ -217,27 +194,16 @@ func GetSingleBudgetItem(c *gin.Context){
 //	@Failure 500 {object} gin.H "Returns error when budget item update fails"
 //	@Router /budgetItem [put]
 func UpdateStatusBudgetItem(c *gin.Context){
-	session := sessions.Default(c)
-
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	
+	services.CheckAuthentication(c)
 
 	budgetItemID := c.Param("budgetItemID")
 
 	var newStatus models.UpdateStatus
-	if err := c.ShouldBindJSON(&newStatus); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err})
-		return
-	}
+	services.BindJSON(c, &newStatus)
 
 	err := services.UpdateBudgetItemStatus(budgetItemID, newStatus)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Item Updated"})
 }
@@ -266,21 +232,13 @@ func UpdateStatusBudgetItem(c *gin.Context){
 //	@Failure 500 {object} gin.H "Returns error when budget item deletion fails"
 //	@Router /budgetItem [delete]
 func DeleteBudgetItem(c *gin.Context){
-	session := sessions.Default(c)
-
-	if session.Get("authenticated") != true {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Access Denied"})
-		return
-	}
+	
+	services.CheckAuthentication(c)
 
 	budgetItemID := c.Param("budgetItemID")
 
 	err := services.DeleteBudgetItem(budgetItemID)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Item Deleted"})
 }
