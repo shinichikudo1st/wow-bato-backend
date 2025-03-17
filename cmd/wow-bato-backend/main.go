@@ -23,6 +23,12 @@ func main() {
 
 	// Stores the SESSION_SECRET in a cookie
 	store := cookie.NewStore([]byte(os.Getenv("SESSION_SECRET")))
+	store.Options(sessions.Options{
+		Path: "/",
+		Domain: "localhost",
+		HttpOnly: true,
+		MaxAge: 0,
+	})
 
 	// Creates a session using the stored SESSION_SECRET key
 	router.Use(sessions.Sessions("mysession", store))

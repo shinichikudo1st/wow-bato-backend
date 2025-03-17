@@ -110,8 +110,13 @@ func LoginUser(c *gin.Context){
 func LogoutUser(c *gin.Context){
 
 	session := sessions.Default(c)
-
 	session.Clear()
+
+	session.Options(sessions.Options{
+		Path: "/",
+		MaxAge: -1,
+		HttpOnly: true,
+	})
 
 	err := session.Save()
 	services.CheckServiceError(c, err)
