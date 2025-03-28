@@ -11,10 +11,36 @@
 package services
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
 )
+
+// Domain-specific errors for barangay operations
+var (
+	ErrBarangayNotFound    = errors.New("barangay not found")
+	ErrInvalidBarangayID   = errors.New("invalid barangay ID format")
+	ErrInvalidPagination   = errors.New("invalid pagination parameters")
+	ErrEmptyBarangayName   = errors.New("barangay name cannot be empty")
+	ErrEmptyBarangayCity   = errors.New("barangay city cannot be empty")
+	ErrEmptyBarangayRegion = errors.New("barangay region cannot be empty")
+)
+
+// validateBarangayData validates the required fields for barangay data
+func validateBarangayData(barangay models.AddBarangay) error {
+	if barangay.Name == "" {
+		return ErrEmptyBarangayName
+	}
+	if barangay.City == "" {
+		return ErrEmptyBarangayCity
+	}
+	if barangay.Region == "" {
+		return ErrEmptyBarangayRegion
+	}
+	return nil
+}
 
 // AddNewBarangay creates a new barangay record with validated information.
 //
@@ -23,16 +49,16 @@ import (
 //
 // Parameters:
 //   - newBarangay: models.AddBarangay - The barangay data transfer object containing:
-//     * Name: Name of the barangay (required)
-//     * City: City where the barangay is located (required)
-//     * Region: Administrative region of the barangay (required)
+//   - Name: Name of the barangay (required)
+//   - City: City where the barangay is located (required)
+//   - Region: Administrative region of the barangay (required)
 //
 // Returns:
 //   - error: nil on successful creation, or an error describing the failure:
-//     * ErrDatabaseConnection: When database connection fails
-//     * ErrDuplicateBarangay: When barangay name already exists
-//     * ErrValidation: When required fields are missing or invalid
-//     * ErrDatabaseOperation: When barangay creation fails
+//   - ErrDatabaseConnection: When database connection fails
+//   - ErrDuplicateBarangay: When barangay name already exists
+//   - ErrValidation: When required fields are missing or invalid
+//   - ErrDatabaseOperation: When barangay creation fails
 //
 // Example usage:
 //
@@ -45,9 +71,13 @@ import (
 //	    return fmt.Errorf("failed to create barangay: %w", err)
 //	}
 func AddNewBarangay(newBarangay models.AddBarangay) error {
+	if err := validateBarangayData(newBarangay); err != nil {
+		return fmt.Errorf("validation failed: %w", err)
+	}
+
 	db, err := database.ConnectDB()
 	if err != nil {
-		return err
+		return fmt.Errorf("database connection failed: %w", err)
 	}
 
 	barangay := models.Barangay{
@@ -56,9 +86,11 @@ func AddNewBarangay(newBarangay models.AddBarangay) error {
 		Region: newBarangay.Region,
 	}
 
-	result := db.Create(&barangay)
+	if result := db.Create(&barangay); result.Error != nil {
+		return fmt.Errorf("failed to create barangay: %w", result.Error)
+	}
 
-	return result.Error
+	return nil
 }
 
 // DeleteBarangay removes a barangay record from the system.
@@ -71,10 +103,10 @@ func AddNewBarangay(newBarangay models.AddBarangay) error {
 //
 // Returns:
 //   - error: nil on successful deletion, or an error describing the failure:
-//     * ErrInvalidID: When barangay_ID format is invalid
-//     * ErrNotFound: When barangay does not exist
-//     * ErrDependencyExists: When barangay has associated records
-//     * ErrDatabaseOperation: When deletion operation fails
+//   - ErrInvalidID: When barangay_ID format is invalid
+//   - ErrNotFound: When barangay does not exist
+//   - ErrDependencyExists: When barangay has associated records
+//   - ErrDatabaseOperation: When deletion operation fails
 //
 // Example usage:
 //
@@ -106,16 +138,16 @@ func DeleteBarangay(barangay_ID string) error {
 // Parameters:
 //   - barangay_ID: string - Unique identifier of the barangay to update
 //   - barangayUpdate: models.UpdateBarangay - The update data containing:
-//     * Name: Updated name of the barangay
-//     * City: Updated city information
-//     * Region: Updated region information
+//   - Name: Updated name of the barangay
+//   - City: Updated city information
+//   - Region: Updated region information
 //
 // Returns:
 //   - error: nil on successful update, or an error describing the failure:
-//     * ErrInvalidID: When barangay_ID format is invalid
-//     * ErrNotFound: When barangay does not exist
-//     * ErrValidation: When update data is invalid
-//     * ErrDatabaseOperation: When update operation fails
+//   - ErrInvalidID: When barangay_ID format is invalid
+//   - ErrNotFound: When barangay does not exist
+//   - ErrValidation: When update data is invalid
+//   - ErrDatabaseOperation: When update operation fails
 //
 // Example usage:
 //
@@ -144,7 +176,6 @@ func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) er
 		return err
 	}
 
-
 	if barangayUpdate.Name != "" {
 		barangay.Name = barangayUpdate.Name
 	}
@@ -152,7 +183,7 @@ func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) er
 	if barangayUpdate.City != "" {
 		barangay.City = barangayUpdate.City
 	}
-	
+
 	if barangayUpdate.Region != "" {
 		barangay.Region = barangayUpdate.Region
 	}
@@ -173,13 +204,13 @@ func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) er
 //
 // Returns:
 //   - []models.AllBarangayResponse: Slice of barangay records containing:
-//     * ID: Unique identifier of the barangay
-//     * Name: Name of the barangay
-//     * City: City where the barangay is located
-//     * Region: Administrative region
+//   - ID: Unique identifier of the barangay
+//   - Name: Name of the barangay
+//   - City: City where the barangay is located
+//   - Region: Administrative region
 //   - error: nil on successful retrieval, or an error describing the failure:
-//     * ErrInvalidPagination: When limit or page parameters are invalid
-//     * ErrDatabaseOperation: When retrieval operation fails
+//   - ErrInvalidPagination: When limit or page parameters are invalid
+//   - ErrDatabaseOperation: When retrieval operation fails
 //
 // Example usage:
 //
@@ -220,10 +251,10 @@ func GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, er
 //
 // Returns:
 //   - []models.OptionBarangay: Slice of barangay options containing:
-//     * ID: Unique identifier of the barangay
-//     * Name: Name of the barangay
+//   - ID: Unique identifier of the barangay
+//   - Name: Name of the barangay
 //   - error: nil on successful retrieval, or an error describing the failure:
-//     * ErrDatabaseOperation: When retrieval operation fails
+//   - ErrDatabaseOperation: When retrieval operation fails
 //
 // Example usage:
 //
@@ -255,16 +286,16 @@ func OptionBarangay() ([]models.OptionBarangay, error) {
 //
 // Returns:
 //   - models.SingleBarangayResponse: Detailed barangay information containing:
-//     * ID: Unique identifier of the barangay
-//     * Name: Name of the barangay
-//     * City: City where the barangay is located
-//     * Region: Administrative region
-//     * CreatedAt: Timestamp of record creation
-//     * UpdatedAt: Timestamp of last update
+//   - ID: Unique identifier of the barangay
+//   - Name: Name of the barangay
+//   - City: City where the barangay is located
+//   - Region: Administrative region
+//   - CreatedAt: Timestamp of record creation
+//   - UpdatedAt: Timestamp of last update
 //   - error: nil on successful retrieval, or an error describing the failure:
-//     * ErrInvalidID: When barangay_ID format is invalid
-//     * ErrNotFound: When barangay does not exist
-//     * ErrDatabaseOperation: When retrieval operation fails
+//   - ErrInvalidID: When barangay_ID format is invalid
+//   - ErrNotFound: When barangay does not exist
+//   - ErrDatabaseOperation: When retrieval operation fails
 //
 // Example usage:
 //
@@ -275,32 +306,35 @@ func OptionBarangay() ([]models.OptionBarangay, error) {
 func GetSingleBarangay(barangay_ID string) (models.AllBarangayResponse, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
-		return models.AllBarangayResponse{}, err
+		return models.AllBarangayResponse{}, fmt.Errorf("database connection failed: %w", err)
 	}
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
-		return models.AllBarangayResponse{}, err
+		return models.AllBarangayResponse{}, fmt.Errorf("%w: %s", ErrInvalidBarangayID, barangay_ID)
 	}
 
 	var barangay models.AllBarangayResponse
-	if err := db.Model(&models.Barangay{}).Select("id, name, city, region").Where("ID = ?", barangay_ID_int).First(&barangay).Error; err != nil {
-		return models.AllBarangayResponse{}, err
+	if err := db.Model(&models.Barangay{}).
+		Select("id, name, city, region").
+		Where("ID = ?", barangay_ID_int).
+		First(&barangay).Error; err != nil {
+		return models.AllBarangayResponse{}, fmt.Errorf("%w: ID %d", ErrBarangayNotFound, barangay_ID_int)
 	}
 
 	return barangay, nil
 }
 
-func AllBarangaysPublic()([]models.PublicBarangayDisplay, error){
-    db, err := database.ConnectDB()
-    if err != nil {
-        return []models.PublicBarangayDisplay{}, err
+func AllBarangaysPublic() ([]models.PublicBarangayDisplay, error) {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return []models.PublicBarangayDisplay{}, err
 	}
 
-    var barangays []models.PublicBarangayDisplay
-    if err := db.Find(&barangays).Error; err != nil {
-       return []models.PublicBarangayDisplay{}, err
-    }
+	var barangays []models.PublicBarangayDisplay
+	if err := db.Find(&barangays).Error; err != nil {
+		return []models.PublicBarangayDisplay{}, err
+	}
 
-    return barangays, nil
+	return barangays, nil
 }
