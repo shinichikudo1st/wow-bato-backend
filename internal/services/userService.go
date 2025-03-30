@@ -12,10 +12,46 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
 )
+
+// Domain-specific errors for user operations
+var (
+	ErrUserNotFound          = errors.New("user not found")
+	ErrInvalidCredentials    = errors.New("invalid email or password")
+	ErrEmptyEmail            = errors.New("email cannot be empty")
+	ErrEmptyPassword         = errors.New("password cannot be empty")
+	ErrEmptyFirstName        = errors.New("first name cannot be empty")
+	ErrEmptyLastName         = errors.New("last name cannot be empty")
+	ErrInvalidRole           = errors.New("invalid user role")
+	ErrEmptyContact          = errors.New("contact information cannot be empty")
+	ErrPasswordHashingFailed = errors.New("password hashing failed")
+	ErrorInvalidBarangayID   = errors.New("invalid barangay ID")
+)
+
+// validateUserRegistration validates the required fields for user registration
+func validateUserRegistration(user models.RegisterUser) error {
+	if user.Email == "" {
+		return ErrEmptyEmail
+	}
+	if user.Password == "" {
+		return ErrEmptyPassword
+	}
+	if user.FirstName == "" {
+		return ErrEmptyFirstName
+	}
+	if user.LastName == "" {
+		return ErrEmptyLastName
+	}
+	if user.Contact == "" {
+		return ErrEmptyContact
+	}
+	// Add role validation if you have specific allowed roles
+	return nil
+}
 
 // RegisterUser handles new user registration with proper validation and security measures.
 //
@@ -25,21 +61,21 @@ import (
 //
 // Parameters:
 //   - registerUser: models.RegisterUser - The registration data transfer object containing:
-//     * Email: User's email address (must be unique in the system)
-//     * Password: Plain text password (will be securely hashed)
-//     * FirstName: User's first name
-//     * LastName: User's last name
-//     * Role: User's system role (determines permissions)
-//     * Barangay_ID: String ID of user's barangay
-//     * Contact: User's contact information
+//   - Email: User's email address (must be unique in the system)
+//   - Password: Plain text password (will be securely hashed)
+//   - FirstName: User's first name
+//   - LastName: User's last name
+//   - Role: User's system role (determines permissions)
+//   - Barangay_ID: String ID of user's barangay
+//   - Contact: User's contact information
 //
 // Returns:
 //   - error: nil on successful registration, or an error describing the failure:
-//     * ErrDatabaseConnection: When database connection fails
-//     * ErrPasswordHashing: When password hashing fails
-//     * ErrInvalidBarangayID: When barangay ID conversion fails
-//     * ErrDatabaseOperation: When user creation in database fails
-//     * ErrDuplicateEmail: When email already exists
+//   - ErrDatabaseConnection: When database connection fails
+//   - ErrPasswordHashing: When password hashing fails
+//   - ErrorInvalidBarangayID: When barangay ID conversion fails
+//   - ErrDatabaseOperation: When user creation in database fails
+//   - ErrDuplicateEmail: When email already exists
 //
 // Example usage:
 //
@@ -57,19 +93,24 @@ import (
 //	    return fmt.Errorf("user registration failed: %w", err)
 //	}
 func RegisterUser(registerUser models.RegisterUser) error {
+	// Validate user registration data
+	if err := validateUserRegistration(registerUser); err != nil {
+		return fmt.Errorf("validation failed: %w", err)
+	}
+
 	db, err := database.ConnectDB()
 	if err != nil {
-		return err
+		return fmt.Errorf("database connection failed: %w", err)
 	}
 
 	hash, err := HashPassword(registerUser.Password)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %v", ErrPasswordHashingFailed, err)
 	}
 
 	barangay_ID, err := strconv.Atoi(registerUser.Barangay_ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %s", ErrorInvalidBarangayID, registerUser.Barangay_ID)
 	}
 
 	barangay_ID_uint := uint(barangay_ID)
@@ -84,8 +125,11 @@ func RegisterUser(registerUser models.RegisterUser) error {
 		Contact:     registerUser.Contact,
 	}
 
-	result := db.Create(&user)
-	return result.Error
+	if result := db.Create(&user); result.Error != nil {
+		return fmt.Errorf("failed to create user: %w", result.Error)
+	}
+
+	return nil
 }
 
 // LoginUser authenticates a user and returns their profile information.
@@ -96,20 +140,20 @@ func RegisterUser(registerUser models.RegisterUser) error {
 //
 // Parameters:
 //   - loginUser: models.LoginUser - The login credentials containing:
-//     * Email: User's registered email address
-//     * Password: User's password (will be verified against stored hash)
+//   - Email: User's registered email address
+//   - Password: User's password (will be verified against stored hash)
 //
 // Returns:
 //   - models.UserStruct: Complete user profile including:
-//     * User's basic information (ID, email, name)
-//     * Role and permissions
-//     * Associated barangay details
-//     * Additional profile metadata
+//   - User's basic information (ID, email, name)
+//   - Role and permissions
+//   - Associated barangay details
+//   - Additional profile metadata
 //   - error: nil on successful authentication, or an error describing the failure:
-//     * ErrInvalidCredentials: When email/password combination is invalid
-//     * ErrDatabaseConnection: When database access fails
-//     * ErrUserNotFound: When user email doesn't exist
-//     * ErrInternalServer: For unexpected system errors
+//   - ErrInvalidCredentials: When email/password combination is invalid
+//   - ErrDatabaseConnection: When database access fails
+//   - ErrUserNotFound: When user email doesn't exist
+//   - ErrInternalServer: For unexpected system errors
 //
 // Example usage:
 //
@@ -123,9 +167,17 @@ func RegisterUser(registerUser models.RegisterUser) error {
 //	    return nil, fmt.Errorf("authentication failed: %w", err)
 //	}
 func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
+	// Validate login credentials
+	if loginUser.Email == "" {
+		return models.UserStruct{}, ErrEmptyEmail
+	}
+	if loginUser.Password == "" {
+		return models.UserStruct{}, ErrEmptyPassword
+	}
+
 	db, err := database.ConnectDB()
 	if err != nil {
-		return models.UserStruct{}, err
+		return models.UserStruct{}, fmt.Errorf("database connection failed: %w", err)
 	}
 
 	var user models.UserStruct
@@ -133,16 +185,16 @@ func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 		Select("id, password, role, barangay_id").
 		Where("email = ?", loginUser.Email).
 		Scan(&user).Error; err != nil {
-		return models.UserStruct{}, err
+		return models.UserStruct{}, fmt.Errorf("%w: email not found", ErrUserNotFound)
 	}
 
 	if !CheckPassword(user.Password, loginUser.Password) {
-		return models.UserStruct{}, errors.New("invalid email or password")
+		return models.UserStruct{}, ErrInvalidCredentials
 	}
 
 	var barangay models.Barangay
 	if err := db.Select("name").Where("id = ?", user.Barangay_ID).First(&barangay).Error; err != nil {
-		return models.UserStruct{}, err
+		return models.UserStruct{}, fmt.Errorf("failed to retrieve barangay: %w", err)
 	}
 
 	user.Barangay_Name = barangay.Name
@@ -182,7 +234,7 @@ func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 func GetUserProfile(userID uint) (models.UserProfile, error) {
 	db, err := database.ConnectDB()
 	if err != nil {
-		return models.UserProfile{}, err
+		return models.UserProfile{}, fmt.Errorf("database connection failed: %w", err)
 	}
 
 	var userProfile models.UserProfile
@@ -190,7 +242,7 @@ func GetUserProfile(userID uint) (models.UserProfile, error) {
 		Select("id, email, first_name, last_name, role, contact").
 		Where("id = ?", userID).
 		Scan(&userProfile).Error; err != nil {
-		return models.UserProfile{}, err
+		return models.UserProfile{}, fmt.Errorf("%w: user ID %d not found", ErrUserNotFound, userID)
 	}
 
 	return userProfile, nil
