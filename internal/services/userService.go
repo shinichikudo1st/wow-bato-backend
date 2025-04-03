@@ -18,7 +18,6 @@ var (
 	ErrInvalidRole           = errors.New("invalid user role")
 	ErrEmptyContact          = errors.New("contact information cannot be empty")
 	ErrPasswordHashingFailed = errors.New("password hashing failed")
-	ErrorInvalidBarangayID   = errors.New("invalid barangay ID")
 )
 
 func validateUserRegistration(user models.RegisterUser) error {
@@ -37,7 +36,7 @@ func validateUserRegistration(user models.RegisterUser) error {
 	if user.Contact == "" {
 		return ErrEmptyContact
 	}
-	
+
 	return nil
 }
 

@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	ErrBudgetCategoryNotFound            = errors.New("budget category not found")
-	ErrInvalidBudgetCategoryID           = errors.New("invalid budget category ID format")
-	ErrEmptyBudgetCategoryName           = errors.New("budget category name cannot be empty")
-	ErrEmptyBudgetDescription            = errors.New("budget category description cannot be empty")
-	ErrInvalidBudgetBarangayID           = errors.New("invalid barangay ID for budget category")
-	ErrorInvalidBarangayIDBudgetCategory = errors.New("invalid barangay ID format")
+	ErrBudgetCategoryNotFound  = errors.New("budget category not found")
+	ErrInvalidBudgetCategoryID = errors.New("invalid budget category ID format")
+	ErrEmptyBudgetCategoryName = errors.New("budget category name cannot be empty")
+	ErrEmptyBudgetDescription  = errors.New("budget category description cannot be empty")
+	ErrInvalidBudgetBarangayID = errors.New("invalid barangay ID for budget category")
+	ErrorInvalidBarangayID     = errors.New("invalid barangay ID format")
 )
 
 func validateBudgetCategory(category models.NewBudgetCategory) error {
@@ -117,7 +117,7 @@ func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]mode
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrorInvalidBarangayIDBudgetCategory, barangay_ID)
+		return nil, fmt.Errorf("%w: %s", ErrorInvalidBarangayID, barangay_ID)
 	}
 
 	limitInt, err := strconv.Atoi(limit)
@@ -161,7 +161,7 @@ func GetBudgetCategoryCount(barangay_ID string) (int64, error) {
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %s", ErrorInvalidBarangayIDBudgetCategory, barangay_ID)
+		return 0, fmt.Errorf("%w: %s", ErrorInvalidBarangayID, barangay_ID)
 	}
 
 	var count int64

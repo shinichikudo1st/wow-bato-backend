@@ -6,6 +6,8 @@ import (
 	"strconv"
 	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
+
+	"gorm.io/gorm"
 )
 
 var (
@@ -16,6 +18,15 @@ var (
 	ErrEmptyBarangayCity   = errors.New("barangay city cannot be empty")
 	ErrEmptyBarangayRegion = errors.New("barangay region cannot be empty")
 )
+
+func getDB() (*gorm.DB, error) {
+	db, err := database.ConnectDB()
+	if err != nil {
+		return nil, fmt.Errorf("database connection failed: %w", err)
+	}
+
+	return db, nil
+}
 
 func validateBarangayData(barangay models.AddBarangay) error {
 	if barangay.Name == "" {
@@ -30,15 +41,14 @@ func validateBarangayData(barangay models.AddBarangay) error {
 	return nil
 }
 
-
 func AddNewBarangay(newBarangay models.AddBarangay) error {
 	if err := validateBarangayData(newBarangay); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
-	db, err := database.ConnectDB()
+	db, err := getDB()
 	if err != nil {
-		return fmt.Errorf("database connection failed: %w", err)
+		return err
 	}
 
 	barangay := models.Barangay{
@@ -54,9 +64,8 @@ func AddNewBarangay(newBarangay models.AddBarangay) error {
 	return nil
 }
 
-
 func DeleteBarangay(barangay_ID string) error {
-	db, err := database.ConnectDB()
+	db, err := getDB()
 	if err != nil {
 		return err
 	}
@@ -73,7 +82,7 @@ func DeleteBarangay(barangay_ID string) error {
 }
 
 func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) error {
-	db, err := database.ConnectDB()
+	db, err := getDB()
 	if err != nil {
 		return err
 	}
@@ -107,7 +116,7 @@ func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) er
 }
 
 func GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, error) {
-	db, err := database.ConnectDB()
+	db, err := getDB()
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +142,7 @@ func GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, er
 }
 
 func OptionBarangay() ([]models.OptionBarangay, error) {
-	db, err := database.ConnectDB()
+	db, err := getDB()
 	if err != nil {
 		return []models.OptionBarangay{}, err
 	}
@@ -147,9 +156,9 @@ func OptionBarangay() ([]models.OptionBarangay, error) {
 }
 
 func GetSingleBarangay(barangay_ID string) (models.AllBarangayResponse, error) {
-	db, err := database.ConnectDB()
+	db, err := getDB()
 	if err != nil {
-		return models.AllBarangayResponse{}, fmt.Errorf("database connection failed: %w", err)
+		return models.AllBarangayResponse{}, err
 	}
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
@@ -169,7 +178,7 @@ func GetSingleBarangay(barangay_ID string) (models.AllBarangayResponse, error) {
 }
 
 func AllBarangaysPublic() ([]models.PublicBarangayDisplay, error) {
-	db, err := database.ConnectDB()
+	db, err := getDB()
 	if err != nil {
 		return []models.PublicBarangayDisplay{}, err
 	}
