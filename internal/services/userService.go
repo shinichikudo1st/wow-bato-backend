@@ -1,13 +1,3 @@
-// Package services implements the core business logic for user management and authentication.
-// It provides a clean separation between the application's domain logic and infrastructure
-// concerns, following clean architecture principles. This package is responsible for:
-//   - User registration and authentication
-//   - Profile management and retrieval
-//   - Password security and hashing
-//   - Business rule validation
-//
-// The services layer acts as an intermediary between the handlers (presentation) layer
-// and the data access layer, ensuring proper encapsulation of business rules.
 package services
 
 import (
@@ -18,7 +8,6 @@ import (
 	"wow-bato-backend/internal/models"
 )
 
-// Domain-specific errors for user operations
 var (
 	ErrUserNotFound          = errors.New("user not found")
 	ErrInvalidCredentials    = errors.New("invalid email or password")
@@ -32,7 +21,6 @@ var (
 	ErrorInvalidBarangayID   = errors.New("invalid barangay ID")
 )
 
-// validateUserRegistration validates the required fields for user registration
 func validateUserRegistration(user models.RegisterUser) error {
 	if user.Email == "" {
 		return ErrEmptyEmail
@@ -49,51 +37,11 @@ func validateUserRegistration(user models.RegisterUser) error {
 	if user.Contact == "" {
 		return ErrEmptyContact
 	}
-	// Add role validation if you have specific allowed roles
+	
 	return nil
 }
 
-// RegisterUser handles new user registration with proper validation and security measures.
-//
-// It implements the core business logic for user registration, including password hashing,
-// data validation, and persistent storage. The function follows security best practices
-// by ensuring passwords are properly hashed before storage.
-//
-// Parameters:
-//   - registerUser: models.RegisterUser - The registration data transfer object containing:
-//   - Email: User's email address (must be unique in the system)
-//   - Password: Plain text password (will be securely hashed)
-//   - FirstName: User's first name
-//   - LastName: User's last name
-//   - Role: User's system role (determines permissions)
-//   - Barangay_ID: String ID of user's barangay
-//   - Contact: User's contact information
-//
-// Returns:
-//   - error: nil on successful registration, or an error describing the failure:
-//   - ErrDatabaseConnection: When database connection fails
-//   - ErrPasswordHashing: When password hashing fails
-//   - ErrorInvalidBarangayID: When barangay ID conversion fails
-//   - ErrDatabaseOperation: When user creation in database fails
-//   - ErrDuplicateEmail: When email already exists
-//
-// Example usage:
-//
-//	newUser := models.RegisterUser{
-//	    Email:       "john.doe@example.com",
-//	    Password:    "securePassword123",
-//	    FirstName:   "John",
-//	    LastName:    "Doe",
-//	    Role:        "resident",
-//	    Barangay_ID: "1",
-//	    Contact:     "+63 912 345 6789",
-//	}
-//	if err := RegisterUser(newUser); err != nil {
-//	    // Handle registration error
-//	    return fmt.Errorf("user registration failed: %w", err)
-//	}
 func RegisterUser(registerUser models.RegisterUser) error {
-	// Validate user registration data
 	if err := validateUserRegistration(registerUser); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
 	}
@@ -132,42 +80,7 @@ func RegisterUser(registerUser models.RegisterUser) error {
 	return nil
 }
 
-// LoginUser authenticates a user and returns their profile information.
-//
-// This function implements secure user authentication by verifying credentials
-// and managing user sessions. It follows security best practices for password
-// verification and user data handling.
-//
-// Parameters:
-//   - loginUser: models.LoginUser - The login credentials containing:
-//   - Email: User's registered email address
-//   - Password: User's password (will be verified against stored hash)
-//
-// Returns:
-//   - models.UserStruct: Complete user profile including:
-//   - User's basic information (ID, email, name)
-//   - Role and permissions
-//   - Associated barangay details
-//   - Additional profile metadata
-//   - error: nil on successful authentication, or an error describing the failure:
-//   - ErrInvalidCredentials: When email/password combination is invalid
-//   - ErrDatabaseConnection: When database access fails
-//   - ErrUserNotFound: When user email doesn't exist
-//   - ErrInternalServer: For unexpected system errors
-//
-// Example usage:
-//
-//	credentials := models.LoginUser{
-//	    Email:    "john.doe@example.com",
-//	    Password: "userPassword123",
-//	}
-//	userProfile, err := LoginUser(credentials)
-//	if err != nil {
-//	    // Handle authentication error
-//	    return nil, fmt.Errorf("authentication failed: %w", err)
-//	}
 func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
-	// Validate login credentials
 	if loginUser.Email == "" {
 		return models.UserStruct{}, ErrEmptyEmail
 	}
@@ -202,35 +115,6 @@ func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 	return user, nil
 }
 
-// GetUserProfile retrieves detailed user profile information.
-//
-// This function performs the following operations:
-// 1. Establishes a database connection
-// 2. Retrieves user profile data based on user ID
-//
-// Parameters:
-//   - userID: uint - The unique identifier of the user
-//
-// Returns:
-//   - models.UserProfile: User profile information including:
-//   - ID
-//   - Email
-//   - FirstName
-//   - LastName
-//   - Role
-//   - Contact
-//   - error: Returns nil if successful, otherwise returns an error:
-//   - Database connection errors
-//   - User not found errors
-//
-// Example:
-//
-//	userID := uint(1)
-//	profile, err := GetUserProfile(userID)
-//	if err != nil {
-//	    log.Printf("Failed to get user profile: %v", err)
-//	    return err
-//	}
 func GetUserProfile(userID uint) (models.UserProfile, error) {
 	db, err := database.ConnectDB()
 	if err != nil {

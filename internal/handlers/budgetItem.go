@@ -1,10 +1,3 @@
-// Package handlers provides HTTP request handlers for the wow-bato application
-// The package implements handlers for budget category management including:
-//   - Budget Item Creation
-//   - Budget Item Deletion
-//   - Budget Item Update
-//   - Get all Budget Items (paginated)
-//   - Get a single budget item
 package handlers
 
 import (
@@ -16,29 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//	AddNewBudgetItem handles the creation for creating new budget item
-//
-//	This handlers performs the following operations:
-//		1. Validates user authentication and authorization
-//		2. Validates and binds the new budget item data
-//		3. Delegates budget item creation to the services layer
-//		4. Returns appropriate response based on operation result
-//
-//	Security:
-//		- Requires authenticated session
-//		- Validates administrative privileges
-//
-//	@Summary Create a new budget item
-//	@Description Creates a new budget item with the provided information
-//	@Tags Budget Item
-//	@Accept json
-//	@Produce json
-//	@Param budgetItem body models.NewBudgetItem true "Budget Item details including name, description, and barangay ID"
-//	@Success 200 {object} gin.H "Returns success message on budget item creation"
-//	@Failure 400 {object} gin.H "Returns error when request validation fails"
-//	@Failure 401 {object} gin.H "Returns error when user is not authenticated"
-//	@Failure 500 {object} gin.H "Returns error when budget item creation fails"
-//	@Router /budgetItem [post]
 func AddNewBudgetItem(c *gin.Context){
 	
 	services.CheckAuthentication(c)
@@ -54,30 +24,6 @@ func AddNewBudgetItem(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Budget Item Added"})
 }
 
-//	GetAllBudgetItem handles the retrieval for budget items and count based on the filter
-//
-//	This handlers performs the following operations:
-//		1. Validates user authentication and authorization
-//		2. Collects the necessary URL parameter(projectID) and Query parameters(filter and page)
-//		3. Delegates budget item retrieval to the services layer
-//		4. Delegates counting of budget items to the services layer
-//		5. Returns budget item slices response as JSON data to client
-//
-//	Security:
-//		- Requires authenticated session
-//		- Validates administrative privileges
-//
-//	@Summary Retrieves budget item
-//	@Description Retrieves budget items and count based on the page and filter
-//	@Tags Budget Item
-//	@No accepted json
-//	@Produce json
-//	@Param Query param: page and filter, Path param: projectID
-//	@Success 200 {object} gin.H "Returns success message and budget item slices as json on budget item retrieval"
-//	@Failure 400 {object} gin.H "Returns error when request validation fails"
-//	@Failure 401 {object} gin.H "Returns error when user is not authenticated"
-//	@Failure 500 {object} gin.H "Returns error when budget retrieval fails"
-//	@Router /budgetItem [get]
 func GetAllBudgetItem(c *gin.Context){
 	
 	services.CheckAuthentication(c)
@@ -134,29 +80,6 @@ func GetAllBudgetItem(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItems, "count": count})
 }
 
-//	GetSingleBudgetItem handles the retrieval for a single budget item based on the budgetItemID
-//
-//	This handlers performs the following operations:
-//		1. Validates user authentication and authorization
-//		2. Collects the necessary URL parameter(budgetItemID)
-//		3. Delegates budget item retrieval to the services layer
-//		4. Returns as single budget item response as JSON data to client
-//
-//	Security:
-//		- Requires authenticated session
-//		- Validates administrative privileges
-//
-//	@Summary Retrieves a single budget item
-//	@Description Retrieves a single budget item based on the path parameter budgetItemID
-//	@Tags Budget Item
-//	@No accepted json body
-//	@Produce json
-//	@Param Path param: budgetItemID
-//	@Success 200 {object} gin.H "Returns success message and the single budget item as json on budget item retrieval"
-//	@Failure 400 {object} gin.H "Returns error when request validation fails"
-//	@Failure 401 {object} gin.H "Returns error when user is not authenticated"
-//	@Failure 500 {object} gin.H "Returns error when budget item retrieval fails"
-//	@Router /budgetItem [get]
 func GetSingleBudgetItem(c *gin.Context){
 	
 	services.CheckAuthentication(c)
@@ -170,29 +93,6 @@ func GetSingleBudgetItem(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItem})
 }
 
-//	UpdateStatusBudgetItem handles the updating of status from pending to rejected or approved
-//
-//	This handlers performs the following operations:
-//		1. Validates user authentication and authorization
-//		2. Collects the necessary URL parameter(budgetItemID)
-//		3. Delegates budget item update to the services layer
-//		4. Returns success message response as JSON data to client
-//
-//	Security:
-//		- Requires authenticated session
-//		- Validates administrative privileges
-//
-//	@Summary Update budget item status
-//	@Description Updates budget item status eg. Pending to Approve or Rejected
-//	@Tags Budget Item
-//	@Accepted json
-//	@Produce json
-//	@Param Path param: budgetItemID
-//	@Success 200 {object} gin.H "Returns success message as json on budget item update"
-//	@Failure 400 {object} gin.H "Returns error when request validation fails"
-//	@Failure 401 {object} gin.H "Returns error when user is not authenticated"
-//	@Failure 500 {object} gin.H "Returns error when budget item update fails"
-//	@Router /budgetItem [put]
 func UpdateStatusBudgetItem(c *gin.Context){
 	
 	services.CheckAuthentication(c)
@@ -208,29 +108,6 @@ func UpdateStatusBudgetItem(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Item Updated"})
 }
 
-//	DeleteBudgetItem handles the deletion for a single budget item based on the budgetItemID
-//
-//	This handlers performs the following operations:
-//		1. Validates user authentication and authorization
-//		2. Collects the necessary URL parameter(budgetItemID)
-//		3. Delegates budget item deletion to the services layer
-//		4. Returns a message of successful deletion of budget item response as JSON data to client
-//
-//	Security:
-//		- Requires authenticated session
-//		- Validates administrative privileges
-//
-//	@Summary Deletes a single budget item
-//	@Description Deletes a single budget item based on the path parameter budgetItemID
-//	@Tags Budget Item
-//	@No accepted json body
-//	@Produce json
-//	@Param Path param: budgetItemID
-//	@Success 200 {object} gin.H "Returns success message for the deletion as json on budget item retrieval"
-//	@Failure 400 {object} gin.H "Returns error when request validation fails"
-//	@Failure 401 {object} gin.H "Returns error when user is not authenticated"
-//	@Failure 500 {object} gin.H "Returns error when budget item deletion fails"
-//	@Router /budgetItem [delete]
 func DeleteBudgetItem(c *gin.Context){
 	
 	services.CheckAuthentication(c)

@@ -6,14 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterBudgetCategoryRoutes registers budget category-related routes on the provided router group.
-//
-// This route contains:
-// - POST /budgetCategory/add: Handles adding a new budget category.
-// - DELETE /budgetCategory/delete/:budget_ID: Handles deleting a budget category.
-// - PUT /budgetCategory/update/:budget_ID: Handles updating a budget category.
-// - GET /budgetCategory/all/:barangay_ID: Handles retrieving a list of budget categories.
-// - GET /budgetCategory/:barangay_ID/:budget_ID: Handles retrieving a single budget category.
 func RegisterBudgetCategoryRoutes(router *gin.RouterGroup) {
 	budgetCategory := router.Group("/budgetCategory")
 	{
