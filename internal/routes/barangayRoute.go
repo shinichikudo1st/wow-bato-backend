@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterBarangayRoute(router *gin.RouterGroup) {
+func RegisterBarangayRoute(router *gin.RouterGroup, handlers *handlers.BarangayHandlers) {
 	barangay := router.Group("/barangay")
 	{
 		barangay.POST("/add", handlers.AddBarangay)

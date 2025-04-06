@@ -3,7 +3,10 @@ package main
 import (
 	"log"
 	"os"
+	database "wow-bato-backend/internal"
+	"wow-bato-backend/internal/handlers"
 	"wow-bato-backend/internal/routes"
+	"wow-bato-backend/internal/services"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
@@ -13,11 +16,15 @@ import (
 )
 
 func main() {
-	// Check if .env file exists
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+    db, err := database.ConnectDB()
+    if err != nil {
+        log.Fatalf("Failed to connect to database: %v", err)
+    }
 
 	router := gin.Default()
 
@@ -42,33 +49,26 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// API versioning for flexibility and scalability
+	barangayService := services.NewBarangayService(db)
+	barangayHandler := handlers.NewBarangayHandlers(barangayService)
+
 	v1 := router.Group("/api/v1")
 	{
-		// User Routes API Version 1
 		routes.RegisterUserRoute(v1)
 
-		// Barangay Routes API Version 1
-		routes.RegisterBarangayRoute(v1)
+		routes.RegisterBarangayRoute(v1, barangayHandler)
 
-		// Budget Category Routes API Version 1
 		routes.RegisterBudgetCategoryRoutes(v1)
 
-		// Budget Item Routes API Version 1
 		routes.RegisterBudgetItemRoutes(v1)
 
-		// Project Routes API Version 1
 		routes.RegisterProjectRoutes(v1)
 
-		// Feedback Routes API Version 1
 		routes.RegisterFeedbackRoutes(v1)
 
-		// Feedback Replies Routes API Version 1
 		routes.RegisterFeedbackReplyRoutes(v1)
 	}
 
-
-	// Server will run on port 8080
 	router.Run(":8080")
 
 }

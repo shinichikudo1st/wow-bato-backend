@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
 
 	"gorm.io/gorm"
@@ -19,13 +18,12 @@ var (
 	ErrEmptyBarangayRegion = errors.New("barangay region cannot be empty")
 )
 
-func getDB() (*gorm.DB, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return nil, fmt.Errorf("database connection failed: %w", err)
-	}
+type BarangayService struct {
+	db *gorm.DB
+}
 
-	return db, nil
+func NewBarangayService(db *gorm.DB) *BarangayService {
+	return &BarangayService{db: db}
 }
 
 func validateBarangayData(barangay models.AddBarangay) error {
@@ -41,14 +39,9 @@ func validateBarangayData(barangay models.AddBarangay) error {
 	return nil
 }
 
-func AddNewBarangay(newBarangay models.AddBarangay) error {
+func (s *BarangayService) AddNewBarangay(newBarangay models.AddBarangay) error {
 	if err := validateBarangayData(newBarangay); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
-	}
-
-	db, err := getDB()
-	if err != nil {
-		return err
 	}
 
 	barangay := models.Barangay{
@@ -57,18 +50,14 @@ func AddNewBarangay(newBarangay models.AddBarangay) error {
 		Region: newBarangay.Region,
 	}
 
-	if result := db.Create(&barangay); result.Error != nil {
-		return fmt.Errorf("failed to create barangay: %w", result.Error)
+	if err := s.db.Create(&barangay).Error; err != nil {
+		return fmt.Errorf("failed to create barangay: %w", err)
 	}
 
 	return nil
 }
 
-func DeleteBarangay(barangay_ID string) error {
-	db, err := getDB()
-	if err != nil {
-		return err
-	}
+func (s *BarangayService) DeleteBarangay(barangay_ID string) error {
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
@@ -76,16 +65,14 @@ func DeleteBarangay(barangay_ID string) error {
 	}
 
 	var barangay models.Barangay
-	result := db.Where("id = ?", barangay_ID_int).Delete(&barangay)
+	if err := s.db.Where("id = ?", barangay_ID_int).Delete(&barangay).Error; err != nil {
+		return fmt.Errorf("failed to delete barangay: %w", err)
+	}
 
-	return result.Error
+	return nil
 }
 
-func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) error {
-	db, err := getDB()
-	if err != nil {
-		return err
-	}
+func (s *BarangayService) UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) error {
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
@@ -94,7 +81,7 @@ func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) er
 
 	var barangay models.Barangay
 
-	if err := db.Where("id = ?", barangay_ID_int).First(&barangay).Error; err != nil {
+	if err := s.db.Where("id = ?", barangay_ID_int).First(&barangay).Error; err != nil {
 		return err
 	}
 
@@ -110,16 +97,14 @@ func UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) er
 		barangay.Region = barangayUpdate.Region
 	}
 
-	result := db.Save(&barangay)
+	if err := s.db.Save(&barangay).Error; err != nil {
+		return fmt.Errorf("failed to save new barangay info changes: %w", err)
+	}
 
-	return result.Error
+	return nil
 }
 
-func GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, error) {
-	db, err := getDB()
-	if err != nil {
-		return nil, err
-	}
+func (s *BarangayService) GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, error) {
 
 	limitInt, err := strconv.Atoi(limit)
 	if err != nil {
@@ -134,32 +119,28 @@ func GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, er
 	offset := (pageInt - 1) * limitInt
 
 	var barangay []models.AllBarangayResponse
-	if err := db.Model(&models.Barangay{}).Select("id, name, city, region").Limit(limitInt).Offset(offset).Find(&barangay).Error; err != nil {
-		return nil, err
-	}
+	if err := s.db.Model(&models.Barangay{}).
+		Select("id, name, city, region").
+		Limit(limitInt).Offset(offset).
+		Find(&barangay).Error; 
+		err != nil { return nil, err }
 
 	return barangay, nil
 }
 
-func OptionBarangay() ([]models.OptionBarangay, error) {
-	db, err := getDB()
-	if err != nil {
-		return []models.OptionBarangay{}, err
-	}
+func (s *BarangayService) OptionBarangay() ([]models.OptionBarangay, error) {
 
 	var barangay []models.OptionBarangay
-	if err := db.Model(&models.Barangay{}).Select("id, name").Scan(&barangay).Error; err != nil {
-		return nil, err
-	}
+	if err := s.db.Model(&models.Barangay{}).
+		Select("id, name").Scan(&barangay).Error; 
+		err != nil {
+			return []models.OptionBarangay{}, err
+		}
 
 	return barangay, nil
 }
 
-func GetSingleBarangay(barangay_ID string) (models.AllBarangayResponse, error) {
-	db, err := getDB()
-	if err != nil {
-		return models.AllBarangayResponse{}, err
-	}
+func (s *BarangayService) GetSingleBarangay(barangay_ID string) (models.AllBarangayResponse, error) {
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
@@ -167,7 +148,7 @@ func GetSingleBarangay(barangay_ID string) (models.AllBarangayResponse, error) {
 	}
 
 	var barangay models.AllBarangayResponse
-	if err := db.Model(&models.Barangay{}).
+	if err := s.db.Model(&models.Barangay{}).
 		Select("id, name, city, region").
 		Where("ID = ?", barangay_ID_int).
 		First(&barangay).Error; err != nil {
@@ -177,15 +158,11 @@ func GetSingleBarangay(barangay_ID string) (models.AllBarangayResponse, error) {
 	return barangay, nil
 }
 
-func AllBarangaysPublic() ([]models.PublicBarangayDisplay, error) {
-	db, err := getDB()
-	if err != nil {
-		return []models.PublicBarangayDisplay{}, err
-	}
+func (s *BarangayService) AllBarangaysPublic() ([]models.PublicBarangayDisplay, error) {
 
 	var barangays []models.PublicBarangayDisplay
-	if err := db.Find(&barangays).Error; err != nil {
-		return []models.PublicBarangayDisplay{}, err
+	if err := s.db.Find(&barangays).Error; err != nil {
+		return nil, err
 	}
 
 	return barangays, nil
