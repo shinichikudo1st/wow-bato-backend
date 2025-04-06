@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"wow-bato-backend/internal/handlers"
 	"wow-bato-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +20,7 @@ func TestRegisterUser(t *testing.T) {
 
 	// Setup router
 	r := gin.Default()
-	r.POST("/register", handlers.RegisterUser)
+	r.POST("/register")
 
 	// Test cases
 	tests := []struct {

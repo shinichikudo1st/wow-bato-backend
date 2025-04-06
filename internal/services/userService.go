@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
+
+	"gorm.io/gorm"
 )
 
 var (
@@ -19,6 +20,14 @@ var (
 	ErrEmptyContact          = errors.New("contact information cannot be empty")
 	ErrPasswordHashingFailed = errors.New("password hashing failed")
 )
+
+type UserService struct {
+	db *gorm.DB
+}
+
+func NewUserService(db *gorm.DB) *UserService {
+	return &UserService{db: db}
+}
 
 func validateUserRegistration(user models.RegisterUser) error {
 	if user.Email == "" {
@@ -40,14 +49,9 @@ func validateUserRegistration(user models.RegisterUser) error {
 	return nil
 }
 
-func RegisterUser(registerUser models.RegisterUser) error {
+func (s *UserService) RegisterUser(registerUser models.RegisterUser) error {
 	if err := validateUserRegistration(registerUser); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
-	}
-
-	db, err := database.ConnectDB()
-	if err != nil {
-		return fmt.Errorf("database connection failed: %w", err)
 	}
 
 	hash, err := HashPassword(registerUser.Password)
@@ -72,14 +76,14 @@ func RegisterUser(registerUser models.RegisterUser) error {
 		Contact:     registerUser.Contact,
 	}
 
-	if result := db.Create(&user); result.Error != nil {
-		return fmt.Errorf("failed to create user: %w", result.Error)
+	if err := s.db.Create(&user).Error; err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
 	}
 
 	return nil
 }
 
-func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
+func (s *UserService) LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 	if loginUser.Email == "" {
 		return models.UserStruct{}, ErrEmptyEmail
 	}
@@ -87,13 +91,8 @@ func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 		return models.UserStruct{}, ErrEmptyPassword
 	}
 
-	db, err := database.ConnectDB()
-	if err != nil {
-		return models.UserStruct{}, fmt.Errorf("database connection failed: %w", err)
-	}
-
 	var user models.UserStruct
-	if err := db.Model(&models.User{}).
+	if err := s.db.Model(&models.User{}).
 		Select("id, password, role, barangay_id").
 		Where("email = ?", loginUser.Email).
 		Scan(&user).Error; err != nil {
@@ -105,7 +104,7 @@ func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 	}
 
 	var barangay models.Barangay
-	if err := db.Select("name").Where("id = ?", user.Barangay_ID).First(&barangay).Error; err != nil {
+	if err := s.db.Select("name").Where("id = ?", user.Barangay_ID).First(&barangay).Error; err != nil {
 		return models.UserStruct{}, fmt.Errorf("failed to retrieve barangay: %w", err)
 	}
 
@@ -114,14 +113,10 @@ func LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
 	return user, nil
 }
 
-func GetUserProfile(userID uint) (models.UserProfile, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return models.UserProfile{}, fmt.Errorf("database connection failed: %w", err)
-	}
+func (s *UserService) GetUserProfile(userID uint) (models.UserProfile, error) {
 
 	var userProfile models.UserProfile
-	if err := db.Model(&models.User{}).
+	if err := s.db.Model(&models.User{}).
 		Select("id, email, first_name, last_name, role, contact").
 		Where("id = ?", userID).
 		Scan(&userProfile).Error; err != nil {

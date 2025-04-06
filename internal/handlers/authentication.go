@@ -9,24 +9,32 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterUser(c *gin.Context) {
+type UserHandlers struct {
+	svc *services.UserService
+}
+
+func NewUserHandlers(svc *services.UserService) *UserHandlers {
+	return &UserHandlers{svc: svc}
+}
+
+func (h *UserHandlers) RegisterUser(c *gin.Context) {
 	var registerUser models.RegisterUser
 
 	services.BindJSON(c, &registerUser)
 
-	err := services.RegisterUser(registerUser)
+	err := h.svc.RegisterUser(registerUser)
 
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }
 
-func LoginUser(c *gin.Context){
+func (h *UserHandlers) LoginUser(c *gin.Context){
 	var loginUser models.LoginUser
 
 	services.BindJSON(c, &loginUser)
 
-	user, err := services.LoginUser(loginUser)
+	user, err := h.svc.LoginUser(loginUser)
 	services.CheckServiceError(c, err)
 
 	session := sessions.Default(c)
@@ -40,7 +48,7 @@ func LoginUser(c *gin.Context){
 
 }
 
-func LogoutUser(c *gin.Context){
+func (h *UserHandlers) LogoutUser(c *gin.Context){
 
 	session := sessions.Default(c)
 	session.Clear()
@@ -57,7 +65,7 @@ func LogoutUser(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged out successfully"})
 }
 
-func CheckAuth(c *gin.Context){
+func (h *UserHandlers) CheckAuth(c *gin.Context){
 	
 
 	session := services.CheckAuthentication(c)
@@ -66,13 +74,13 @@ func CheckAuth(c *gin.Context){
 	"user_id": session.Get("user_id"), "barangay_id": session.Get("barangay_id"), "barangay_name": session.Get("barangay_name")})
 }
 
-func GetUserProfile(c *gin.Context){
+func (h *UserHandlers) GetUserProfile(c *gin.Context){
 
 	session := services.CheckAuthentication(c)
 
 	userID := session.Get("user_id")
 
-	userProfile, err := services.GetUserProfile(userID.(uint))
+	userProfile, err := h.svc.GetUserProfile(userID.(uint))
 
 	services.CheckServiceError(c, err)
 

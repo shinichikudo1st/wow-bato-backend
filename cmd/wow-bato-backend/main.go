@@ -52,9 +52,12 @@ func main() {
 	barangayService := services.NewBarangayService(db)
 	barangayHandler := handlers.NewBarangayHandlers(barangayService)
 
+	userService := services.NewUserService(db)
+	userHandler := handlers.NewUserHandlers(userService)
+
 	v1 := router.Group("/api/v1")
 	{
-		routes.RegisterUserRoute(v1)
+		routes.RegisterUserRoute(v1, userHandler)
 
 		routes.RegisterBarangayRoute(v1, barangayHandler)
 
