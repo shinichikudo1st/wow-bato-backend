@@ -9,7 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateFeedBack(c *gin.Context) {
+type FeedbackHandlers struct {
+    svc *services.FeedbackService
+}
+
+func NewFeedbackHandlers(svc *services.FeedbackService) *FeedbackHandlers {
+    return &FeedbackHandlers{svc: svc}
+}
+
+func (h *FeedbackHandlers) CreateFeedBack(c *gin.Context) {
     
     session := services.CheckAuthentication(c)
 
@@ -30,26 +38,26 @@ func CreateFeedBack(c *gin.Context) {
         ProjectID: uint(project_id_int),
     }
 
-    err = services.CreateFeedback(feedback)
+    err = h.svc.CreateFeedback(feedback)
     services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "New feedback created"})
 }
 
-func GetAllFeedbacks(c *gin.Context){
+func (h *FeedbackHandlers) GetAllFeedbacks(c *gin.Context){
     
     services.CheckAuthentication(c)
 
     projectID := c.Param("projectID")
 
-    feedbacks, err := services.GetAllFeedback(projectID)
+    feedbacks, err := h.svc.GetAllFeedback(projectID)
     services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"feedbacks": feedbacks})
 
 }
 
-func EditFeedback(c *gin.Context){
+func (h *FeedbackHandlers) EditFeedback(c *gin.Context){
     
     services.CheckAuthentication(c)
     
@@ -58,19 +66,19 @@ func EditFeedback(c *gin.Context){
     var newFeedback models.NewFeedback
     services.BindJSON(c, &newFeedback)
 
-    err := services.EditFeedback(feedbackID, newFeedback)
+    err := h.svc.EditFeedback(feedbackID, newFeedback)
     services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Feedback edited"})
 }
 
-func DeleteFeedback(c *gin.Context){
+func (h *FeedbackHandlers) DeleteFeedback(c *gin.Context){
 
     services.CheckAuthentication(c)
 
     feedbackID := c.Param("feedbackID")
 
-    err := services.DeleteFeedback(feedbackID)
+    err := h.svc.DeleteFeedback(feedbackID)
     services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Feedback deleted"})

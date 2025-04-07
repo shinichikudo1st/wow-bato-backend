@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterFeedbackRoutes(router *gin.RouterGroup) {
+func RegisterFeedbackRoutes(router *gin.RouterGroup, handlers *handlers.FeedbackHandlers) {
 	feedback := router.Group("/feedback")
 	{
 		feedback.POST("/create/:projectID", handlers.CreateFeedBack)

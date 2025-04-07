@@ -2,15 +2,20 @@ package services
 
 import (
 	"strconv"
-	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
+
+	"gorm.io/gorm"
 )
 
-func CreateFeedback(newFeedback models.CreateFeedback) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+type FeedbackService struct {
+	db *gorm.DB
+}
+
+func NewFeedbackService(db *gorm.DB) *FeedbackService {
+	return &FeedbackService{db: db}
+}
+
+func (s *FeedbackService) CreateFeedback(newFeedback models.CreateFeedback) error {
 
 	feedback := models.Feedback{
 		Content:   newFeedback.Content,
@@ -19,16 +24,12 @@ func CreateFeedback(newFeedback models.CreateFeedback) error {
 		ProjectID: newFeedback.ProjectID,
 	}
 
-	result := db.Create(&feedback)
+	result := s.db.Create(&feedback)
 
 	return result.Error
 }
 
-func GetAllFeedback(projectID string) ([]models.GetAllFeedbacks, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return []models.GetAllFeedbacks{}, err
-	}
+func (s *FeedbackService) GetAllFeedback(projectID string) ([]models.GetAllFeedbacks, error) {
 
 	projectid_int, err := strconv.Atoi(projectID)
 	if err != nil {
@@ -36,7 +37,7 @@ func GetAllFeedback(projectID string) ([]models.GetAllFeedbacks, error) {
 	}
 
 	var feedbacks []models.GetAllFeedbacks
-	if err := db.Model(&models.Feedback{}).Where("project_id = ?", projectid_int).Select("id, content, role, project_id, user_id").Scan(&feedbacks).Error; err != nil {
+	if err := s.db.Model(&models.Feedback{}).Where("project_id = ?", projectid_int).Select("id, content, role, project_id, user_id").Scan(&feedbacks).Error; err != nil {
 		return []models.GetAllFeedbacks{}, err
 	}
 
@@ -46,7 +47,7 @@ func GetAllFeedback(projectID string) ([]models.GetAllFeedbacks, error) {
 	}
 
 	var users []models.FeedbackUser
-	if err := db.Model(&models.User{}).Where("id IN (?)", user_id_list).Select("id, first_name, last_name").Scan(&users).Error; err != nil {
+	if err := s.db.Model(&models.User{}).Where("id IN (?)", user_id_list).Select("id, first_name, last_name").Scan(&users).Error; err != nil {
 		return []models.GetAllFeedbacks{}, err
 	}
 
@@ -62,11 +63,7 @@ func GetAllFeedback(projectID string) ([]models.GetAllFeedbacks, error) {
 	return feedbacks, nil
 }
 
-func EditFeedback(feedbackID string, editedFeedback models.NewFeedback) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+func (s *FeedbackService) EditFeedback(feedbackID string, editedFeedback models.NewFeedback) error {
 
 	feedbackID_int, err := strconv.Atoi(feedbackID)
 	if err != nil {
@@ -74,22 +71,18 @@ func EditFeedback(feedbackID string, editedFeedback models.NewFeedback) error {
 	}
 
 	var feedback models.Feedback
-	if err := db.Where("id = ?", feedbackID_int).First(&feedback).Error; err != nil {
+	if err := s.db.Where("id = ?", feedbackID_int).First(&feedback).Error; err != nil {
 		return err
 	}
 
 	feedback.Content = editedFeedback.Content
 
-	result := db.Save(&feedback)
+	result := s.db.Save(&feedback)
 
 	return result.Error
 }
 
-func DeleteFeedback(feedbackID string) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+func (s *FeedbackService) DeleteFeedback(feedbackID string) error {
 
 	feedbackID_int, err := strconv.Atoi(feedbackID)
 	if err != nil {
@@ -97,7 +90,7 @@ func DeleteFeedback(feedbackID string) error {
 	}
 
 	var feedback models.Feedback
-	if err := db.Where("id = ?", feedbackID_int).Delete(&feedback).Error; err != nil {
+	if err := s.db.Where("id = ?", feedbackID_int).Delete(&feedback).Error; err != nil {
 		return err
 	}
 
