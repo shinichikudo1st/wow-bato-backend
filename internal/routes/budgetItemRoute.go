@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterBudgetItemRoutes(router *gin.RouterGroup) {
+func RegisterBudgetItemRoutes(router *gin.RouterGroup, handlers *handlers.BudgetItemHandlers) {
 	budgetItem := router.Group("/budgetItem")
 	{
 		budgetItem.POST("/add/:projectID", handlers.AddNewBudgetItem)

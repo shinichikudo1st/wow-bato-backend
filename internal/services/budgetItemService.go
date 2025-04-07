@@ -2,15 +2,20 @@ package services
 
 import (
 	"strconv"
-	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
+
+	"gorm.io/gorm"
 )
 
-func AddBudgetItem(projectID string, budgetItem models.NewBudgetItem) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+type BudgetItemService struct {
+	db *gorm.DB
+}
+
+func NewBudgetItemService (db *gorm.DB) *BudgetItemService {
+	return &BudgetItemService{db: db}
+}
+
+func (s *BudgetItemService) AddBudgetItem(projectID string, budgetItem models.NewBudgetItem) error {
 
 	projectID_int, err := strconv.Atoi(projectID)
 	if err != nil {
@@ -25,16 +30,12 @@ func AddBudgetItem(projectID string, budgetItem models.NewBudgetItem) error {
 		ProjectID:       uint(projectID_int),
 	}
 
-	result := db.Create(&newBudgetItem)
+	result := s.db.Create(&newBudgetItem)
 
 	return result.Error
 }
 
-func GetAllBudgetItem(projectID string, filter string, page string) ([]models.Budget_Item, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return []models.Budget_Item{}, err
-	}
+func (s *BudgetItemService) GetAllBudgetItem(projectID string, filter string, page string) ([]models.Budget_Item, error) {
 
 	projectID_int, err := strconv.Atoi(projectID)
 	if err != nil {
@@ -53,25 +54,21 @@ func GetAllBudgetItem(projectID string, filter string, page string) ([]models.Bu
 
 	var budgetItem []models.Budget_Item
 	if filter == "All" {
-		if err := db.Where("project_id = ?", projectID_int).Find(&budgetItem).Limit(limit).Offset(offset).Error; err != nil {
+		if err := s.db.Where("project_id = ?", projectID_int).Find(&budgetItem).Limit(limit).Offset(offset).Error; err != nil {
 			return []models.Budget_Item{}, err
 		}
 
 		return budgetItem, nil
 	}
 
-	if err := db.Where("project_id = ? AND status = ?", projectID_int, filter).Find(&budgetItem).Limit(limit).Offset(offset).Error; err != nil {
+	if err := s.db.Where("project_id = ? AND status = ?", projectID_int, filter).Find(&budgetItem).Limit(limit).Offset(offset).Error; err != nil {
 		return []models.Budget_Item{}, err
 	}
 
 	return budgetItem, nil
 }
 
-func CountBudgetItem(projectID string) (int64, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return 0, err
-	}
+func (s *BudgetItemService) CountBudgetItem(projectID string) (int64, error) {
 
 	projectID_int, err := strconv.Atoi(projectID)
 	if err != nil {
@@ -79,18 +76,14 @@ func CountBudgetItem(projectID string) (int64, error) {
 	}
 
 	var count int64
-	if err := db.Model(&models.Budget_Item{}).Where("project_id = ?", projectID_int).Count(&count).Error; err != nil {
+	if err := s.db.Model(&models.Budget_Item{}).Where("project_id = ?", projectID_int).Count(&count).Error; err != nil {
 		return 0, err
 	}
 
 	return count, nil
 }
 
-func GetSingleBudgetItem(categoryID string, budgetItemID string) (models.Budget_Item, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return models.Budget_Item{}, err
-	}
+func (s *BudgetItemService) GetSingleBudgetItem(categoryID string, budgetItemID string) (models.Budget_Item, error) {
 
 	categoryID_int, err := strconv.Atoi(categoryID)
 	if err != nil {
@@ -103,18 +96,14 @@ func GetSingleBudgetItem(categoryID string, budgetItemID string) (models.Budget_
 	}
 
 	var budgetItem models.Budget_Item
-	if err := db.Where("categoryID = ? AND status = ?", categoryID_int, budgetItemID_int).First(&budgetItem).Error; err != nil {
+	if err := s.db.Where("categoryID = ? AND status = ?", categoryID_int, budgetItemID_int).First(&budgetItem).Error; err != nil {
 		return models.Budget_Item{}, err
 	}
 
 	return budgetItem, nil
 }
 
-func UpdateBudgetItemStatus(budgetItemID string, newStatus models.UpdateStatus) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+func (s *BudgetItemService) UpdateBudgetItemStatus(budgetItemID string, newStatus models.UpdateStatus) error {
 
 	var updateStatus string
 	if newStatus.Status == "approve" {
@@ -129,29 +118,25 @@ func UpdateBudgetItemStatus(budgetItemID string, newStatus models.UpdateStatus) 
 	}
 
 	var budgetItem models.Budget_Item
-	if err := db.Where("id = ?", budgetItemID_int).First(&budgetItem).Error; err != nil {
+	if err := s.db.Where("id = ?", budgetItemID_int).First(&budgetItem).Error; err != nil {
 		return err
 	}
 
 	budgetItem.Status = updateStatus
 
-	result := db.Save(&budgetItem)
+	result := s.db.Save(&budgetItem)
 
 	return result.Error
 }
 
-func DeleteBudgetItem(budgetItemID string) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+func (s *BudgetItemService) DeleteBudgetItem(budgetItemID string) error {
 
 	budgetItemID_int, err := strconv.Atoi(budgetItemID)
 	if err != nil {
 		return err
 	}
 
-	if err := db.Where("id = ?", budgetItemID_int).Delete(&models.Budget_Item{}).Error; err != nil {
+	if err := s.db.Where("id = ?", budgetItemID_int).Delete(&models.Budget_Item{}).Error; err != nil {
 		return err
 	}
 

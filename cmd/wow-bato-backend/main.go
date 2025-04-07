@@ -55,6 +55,9 @@ func main() {
 	userService := services.NewUserService(db)
 	userHandler := handlers.NewUserHandlers(userService)
 
+	budgetItemService := services.NewBudgetItemService(db)
+	budgetItemHandler := handlers.NewBudgetItemHandlers(budgetItemService)
+
 	v1 := router.Group("/api/v1")
 	{
 		routes.RegisterUserRoute(v1, userHandler)
@@ -63,7 +66,7 @@ func main() {
 
 		routes.RegisterBudgetCategoryRoutes(v1)
 
-		routes.RegisterBudgetItemRoutes(v1)
+		routes.RegisterBudgetItemRoutes(v1, budgetItemHandler)
 
 		routes.RegisterProjectRoutes(v1)
 

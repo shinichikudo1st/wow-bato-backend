@@ -9,7 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AddNewBudgetItem(c *gin.Context){
+type BudgetItemHandlers struct {
+	svc *services.BudgetItemService
+}
+
+func NewBudgetItemHandlers(svc *services.BudgetItemService) *BudgetItemHandlers {
+	return &BudgetItemHandlers{svc: svc}
+}
+
+func (h *BudgetItemHandlers) AddNewBudgetItem(c *gin.Context){
 	
 	services.CheckAuthentication(c)
 
@@ -18,13 +26,13 @@ func AddNewBudgetItem(c *gin.Context){
 	var budgetItem models.NewBudgetItem
 	services.BindJSON(c, &budgetItem)
 
-	err := services.AddBudgetItem(projectID, budgetItem)
+	err := h.svc.AddBudgetItem(projectID, budgetItem)
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Budget Item Added"})
 }
 
-func GetAllBudgetItem(c *gin.Context){
+func (h *BudgetItemHandlers) GetAllBudgetItem(c *gin.Context){
 	
 	services.CheckAuthentication(c)
 
@@ -45,7 +53,7 @@ func GetAllBudgetItem(c *gin.Context){
 
 	go func ()  {
 		defer wg.Done()
-		result, err := services.GetAllBudgetItem(projectID, filter, page)
+		result, err := h.svc.GetAllBudgetItem(projectID, filter, page)
 		if err != nil {
 			mu.Lock()
 			errors = append(errors, err)
@@ -59,7 +67,7 @@ func GetAllBudgetItem(c *gin.Context){
 
 	go func () {
 		defer wg.Done()
-		result, err := services.CountBudgetItem(projectID)
+		result, err := h.svc.CountBudgetItem(projectID)
 		if err != nil {
 			mu.Lock()
 			errors = append(errors, err)
@@ -80,20 +88,20 @@ func GetAllBudgetItem(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItems, "count": count})
 }
 
-func GetSingleBudgetItem(c *gin.Context){
+func (h *BudgetItemHandlers) GetSingleBudgetItem(c *gin.Context){
 	
 	services.CheckAuthentication(c)
 
 	projectID := c.Param("projectID")
 	budgetItemID := c.Param("budgetItemID")
 
-	budgetItem, err := services.GetSingleBudgetItem(projectID, budgetItemID)
+	budgetItem, err := h.svc.GetSingleBudgetItem(projectID, budgetItemID)
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Retrieved Budget Items for category", "data": budgetItem})
 }
 
-func UpdateStatusBudgetItem(c *gin.Context){
+func (h *BudgetItemHandlers) UpdateStatusBudgetItem(c *gin.Context){
 	
 	services.CheckAuthentication(c)
 
@@ -102,19 +110,19 @@ func UpdateStatusBudgetItem(c *gin.Context){
 	var newStatus models.UpdateStatus
 	services.BindJSON(c, &newStatus)
 
-	err := services.UpdateBudgetItemStatus(budgetItemID, newStatus)
+	err := h.svc.UpdateBudgetItemStatus(budgetItemID, newStatus)
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Item Updated"})
 }
 
-func DeleteBudgetItem(c *gin.Context){
+func (h *BudgetItemHandlers) DeleteBudgetItem(c *gin.Context){
 	
 	services.CheckAuthentication(c)
 
 	budgetItemID := c.Param("budgetItemID")
 
-	err := services.DeleteBudgetItem(budgetItemID)
+	err := h.svc.DeleteBudgetItem(budgetItemID)
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Item Deleted"})
