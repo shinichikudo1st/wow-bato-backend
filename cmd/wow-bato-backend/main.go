@@ -61,6 +61,9 @@ func main() {
 	feedbackService := services.NewFeedbackService(db)
 	feedbackHandler := handlers.NewFeedbackHandlers(feedbackService)
 
+	feedbackReplyService := services.NewFeedbackReplyService(db)
+	feedbackReplyHandlers := handlers.NewFeedbackReplyHandlers(feedbackReplyService)
+
 	v1 := router.Group("/api/v1")
 	{
 		routes.RegisterUserRoute(v1, userHandler)
@@ -75,7 +78,7 @@ func main() {
 
 		routes.RegisterFeedbackRoutes(v1, feedbackHandler)
 
-		routes.RegisterFeedbackReplyRoutes(v1)
+		routes.RegisterFeedbackReplyRoutes(v1, feedbackReplyHandlers)
 	}
 
 	router.Run(":8080")

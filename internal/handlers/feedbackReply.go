@@ -8,7 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateFeedbackReply(c *gin.Context){
+type FeedbackReplyHandlers struct {
+    svc *services.FeedbackReplyService
+}
+
+func NewFeedbackReplyHandlers(svc *services.FeedbackReplyService) *FeedbackReplyHandlers {
+    return &FeedbackReplyHandlers{svc: svc}
+}
+
+func (h *FeedbackReplyHandlers) CreateFeedbackReply(c *gin.Context){
     
     session := services.CheckAuthentication(c)
 
@@ -28,37 +36,37 @@ func CreateFeedbackReply(c *gin.Context){
         UserID: userID,
     }
 
-    err := services.CreateFeedbackReply(newReply)
+    err := h.svc.CreateFeedbackReply(newReply)
     services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Reply submitted"})
 }
 
-func GetAllReplies(c *gin.Context){
+func (h *FeedbackReplyHandlers) GetAllReplies(c *gin.Context){
     
     services.CheckAuthentication(c)
 
     feedbackID := c.Param("feedbackID")
 
-    replies, err := services.GetAllReplies(feedbackID)
+    replies, err := h.svc.GetAllReplies(feedbackID)
     services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Replies retrived", "data": replies})
 }
 
-func DeleteFeedbackReply(c *gin.Context){
+func (h *FeedbackReplyHandlers) DeleteFeedbackReply(c *gin.Context){
     
     services.CheckAuthentication(c)
 
     feedback_id := c.Param("feedbackID")
 
-    err := services.DeleteFeedbackReply(feedback_id)
+    err := h.svc.DeleteFeedbackReply(feedback_id)
     services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Reply deleted"})
 }
 
-func EditFeedbackReply(c *gin.Context){
+func (h *FeedbackReplyHandlers) EditFeedbackReply(c *gin.Context){
     
     session := services.CheckAuthentication(c)
 
@@ -74,7 +82,7 @@ func EditFeedbackReply(c *gin.Context){
 
     replyID := c.Param("replyID")
 
-    err := services.EditFeedbackReply(replyID, editReply.Content)
+    err := h.svc.EditFeedbackReply(replyID, editReply.Content)
     services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Reply Edited"})

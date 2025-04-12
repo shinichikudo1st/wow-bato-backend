@@ -2,16 +2,21 @@ package services
 
 import (
 	"strconv"
-	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
+
+	"gorm.io/gorm"
 )
 
-func CreateFeedbackReply(newReply models.NewFeedbackReply) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+type FeedbackReplyService struct {
+	db *gorm.DB
+}
 
+func NewFeedbackReplyService(db *gorm.DB) *FeedbackReplyService {
+	return &FeedbackReplyService{db: db}
+}
+
+func (s *FeedbackReplyService) CreateFeedbackReply(newReply models.NewFeedbackReply) error {
+	
 	feedbackID, err := strconv.Atoi(newReply.FeedbackID)
 	if err != nil {
 		return err
@@ -23,16 +28,12 @@ func CreateFeedbackReply(newReply models.NewFeedbackReply) error {
 		UserID:     newReply.UserID,
 	}
 
-	result := db.Create(&reply)
+	result := s.db.Create(&reply)
 
 	return result.Error
 }
 
-func GetAllReplies(feedbackID string) ([]models.FeedbackReply, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return []models.FeedbackReply{}, err
-	}
+func (s *FeedbackReplyService) GetAllReplies(feedbackID string) ([]models.FeedbackReply, error) {
 
 	feedbackID_int, err := strconv.Atoi(feedbackID)
 	if err != nil {
@@ -40,18 +41,14 @@ func GetAllReplies(feedbackID string) ([]models.FeedbackReply, error) {
 	}
 
 	var replies []models.FeedbackReply
-	if err := db.Where("feedback_ID = ?", feedbackID_int).Find(&replies).Error; err != nil {
+	if err := s.db.Where("feedback_ID = ?", feedbackID_int).Find(&replies).Error; err != nil {
 		return []models.FeedbackReply{}, err
 	}
 
 	return replies, nil
 }
 
-func DeleteFeedbackReply(feedbackID string) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+func (s *FeedbackReplyService) DeleteFeedbackReply(feedbackID string) error {
 
 	feedbackID_int, err := strconv.Atoi(feedbackID)
 	if err != nil {
@@ -59,18 +56,14 @@ func DeleteFeedbackReply(feedbackID string) error {
 	}
 
 	var reply models.FeedbackReply
-	if err := db.Where("id = ?", feedbackID_int).Delete(&reply).Error; err != nil {
+	if err := s.db.Where("id = ?", feedbackID_int).Delete(&reply).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func EditFeedbackReply(replyID string, content string) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+func (s *FeedbackReplyService) EditFeedbackReply(replyID string, content string) error {
 
 	replyID_int, err := strconv.Atoi(replyID)
 	if err != nil {
@@ -78,7 +71,7 @@ func EditFeedbackReply(replyID string, content string) error {
 	}
 
 	var reply models.FeedbackReply
-	if err := db.Where("id = ?", replyID_int).First(&reply).Error; err != nil {
+	if err := s.db.Where("id = ?", replyID_int).First(&reply).Error; err != nil {
 		return err
 	}
 
@@ -86,7 +79,7 @@ func EditFeedbackReply(replyID string, content string) error {
 		reply.Content = content
 	}
 
-	result := db.Save(&reply)
+	result := s.db.Save(&reply)
 
 	return result.Error
 }
