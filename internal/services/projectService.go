@@ -3,15 +3,20 @@ package services
 import (
 	"strconv"
 	"time"
-	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
+
+	"gorm.io/gorm"
 )
 
-func AddNewProject(barangay_ID uint, categoryID string, newProject models.NewProject) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+type ProjectService struct {
+	db *gorm.DB
+}
+
+func NewProjectService(db *gorm.DB) *ProjectService {
+	return &ProjectService{db: db}
+}
+
+func (s *ProjectService) AddNewProject(barangay_ID uint, categoryID string, newProject models.NewProject) error {
 
 	categoryID_int, err := strconv.Atoi(categoryID)
 	if err != nil {
@@ -40,32 +45,24 @@ func AddNewProject(barangay_ID uint, categoryID string, newProject models.NewPro
 		Status:      newProject.Status,
 	}
 
-	result := db.Create(&project)
+	result := s.db.Create(&project)
 
 	return result.Error
 }
 
-func DeleteProject(barangay_ID uint, projectID string) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+func (s *ProjectService) DeleteProject(barangay_ID uint, projectID string) error {
 
 	projectID_int, err := strconv.Atoi(projectID)
 	if err != nil {
 		return err
 	}
 
-	result := db.Delete(&models.Project{}, projectID_int)
+	result := s.db.Delete(&models.Project{}, projectID_int)
 
 	return result.Error
 }
 
-func UpdateProject(barangay_ID uint, projectID string, updateProject models.UpdateProject) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+func (s *ProjectService) UpdateProject(barangay_ID uint, projectID string, updateProject models.UpdateProject) error {
 
 	projectID_int, err := strconv.Atoi(projectID)
 	if err != nil {
@@ -73,23 +70,19 @@ func UpdateProject(barangay_ID uint, projectID string, updateProject models.Upda
 	}
 
 	var project models.Project
-	if err := db.Where("Barangay_ID = ? AND id = ?", barangay_ID, projectID_int).Error; err != nil {
+	if err := s.db.Where("Barangay_ID = ? AND id = ?", barangay_ID, projectID_int).Error; err != nil {
 		return err
 	}
 
 	project.Name = updateProject.Name
 	project.Description = updateProject.Description
 
-	result := db.Save(&project)
+	result := s.db.Save(&project)
 
 	return result.Error
 }
 
-func GetAllProjects(barangay_ID uint, categoryID string, limit string, page string) ([]models.ProjectList, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return nil, err
-	}
+func (s *ProjectService) GetAllProjects(barangay_ID uint, categoryID string, limit string, page string) ([]models.ProjectList, error) {
 
 	limit_int, err := strconv.Atoi(limit)
 	if err != nil {
@@ -109,7 +102,7 @@ func GetAllProjects(barangay_ID uint, categoryID string, limit string, page stri
 	}
 
 	var projects []models.ProjectList
-	if err := db.Model(&models.Project{}).
+	if err := s.db.Model(&models.Project{}).
 		Where("barangay_id = ? AND category_id = ?", barangay_ID, categoryID_int).
 		Select("id, name, status, start_date, end_date").
 		Limit(limit_int).
@@ -121,11 +114,7 @@ func GetAllProjects(barangay_ID uint, categoryID string, limit string, page stri
 	return projects, nil
 }
 
-func UpdateProjectStatus(projectID string, barangay_ID uint, newStatus models.NewProjectStatus) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return err
-	}
+func (s *ProjectService) UpdateProjectStatus(projectID string, barangay_ID uint, newStatus models.NewProjectStatus) error {
 
 	projectID_int, err := strconv.Atoi(projectID)
 	if err != nil {
@@ -133,7 +122,7 @@ func UpdateProjectStatus(projectID string, barangay_ID uint, newStatus models.Ne
 	}
 
 	var project models.Project
-	if err := db.Where("Barangay_ID = ? AND id = ?", barangay_ID, projectID_int).First(&project).Error; err != nil {
+	if err := s.db.Where("Barangay_ID = ? AND id = ?", barangay_ID, projectID_int).First(&project).Error; err != nil {
 		return err
 	}
 
@@ -142,24 +131,20 @@ func UpdateProjectStatus(projectID string, barangay_ID uint, newStatus models.Ne
 		project.Status = newStatus.Status
 		project.StartDate = newStatus.FlexDate
 
-		result := db.Save(&project)
+		result := s.db.Save(&project)
 		return result.Error
 
 	} else {
 		project.Status = newStatus.Status
 		project.EndDate = newStatus.FlexDate
 
-		result := db.Save(&project)
+		result := s.db.Save(&project)
 		return result.Error
 
 	}
 }
 
-func GetProjectSingle(projectID string)(models.ProjectList, error){
-	db, err := database.ConnectDB()
-	if err != nil {
-		return models.ProjectList{}, err
-	}
+func (s *ProjectService) GetProjectSingle(projectID string)(models.ProjectList, error){
 
 	projectID_int, err := strconv.Atoi(projectID)
 	if err != nil {
@@ -167,7 +152,7 @@ func GetProjectSingle(projectID string)(models.ProjectList, error){
 	}
 
 	var project models.ProjectList
-	if err := db.Model(&models.Project{}).Where("id = ?", projectID_int).First(&project).Error; err != nil {
+	if err := s.db.Model(&models.Project{}).Where("id = ?", projectID_int).First(&project).Error; err != nil {
 		return models.ProjectList{}, err
 	}
 

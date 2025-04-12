@@ -9,7 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AddNewProject(c *gin.Context){
+type ProjectHandlers struct {
+	svc *services.ProjectService
+}
+
+func NewProjectHandlers(svc *services.ProjectService) *ProjectHandlers {
+	return &ProjectHandlers{svc: svc}
+}
+
+func (h *ProjectHandlers) AddNewProject(c *gin.Context){
 
 	session := services.CheckAuthentication(c)
 
@@ -26,26 +34,26 @@ func AddNewProject(c *gin.Context){
 	var newProject models.NewProject
 	services.BindJSON(c, &newProject)
 
-	err := services.AddNewProject(barangay_ID, categoryID, newProject)
+	err := h.svc.AddNewProject(barangay_ID, categoryID, newProject)
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Project Created"})
 }
 
-func DeleteProject(c *gin.Context){
+func (h *ProjectHandlers) DeleteProject(c *gin.Context){
 
 	session := services.CheckAuthentication(c)
 
 	projectID := c.Param("projectID")
 	barangay_ID := session.Get("barangay_ID").(uint)
 
-	err := services.DeleteProject(barangay_ID, projectID)
+	err := h.svc.DeleteProject(barangay_ID, projectID)
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Project Deleted"})
 }
 
-func UpdateProject(c *gin.Context){
+func (h *ProjectHandlers) UpdateProject(c *gin.Context){
 
     session := services.CheckAuthentication(c)
 
@@ -55,13 +63,13 @@ func UpdateProject(c *gin.Context){
     var updateProject models.UpdateProject
     services.BindJSON(c, &updateProject)
 
-    err := services.UpdateProject(barangay_ID, projectID, updateProject)
+    err := h.svc.UpdateProject(barangay_ID, projectID, updateProject)
     services.CheckServiceError(c, err)
 
     c.IndentedJSON(http.StatusOK, gin.H{"message": "Updated Project"})
 }
 
-func GetAllProjects(c *gin.Context){
+func (h *ProjectHandlers) GetAllProjects(c *gin.Context){
 
 	session := services.CheckAuthentication(c)
 	
@@ -88,7 +96,7 @@ func GetAllProjects(c *gin.Context){
 
 	go func(){
 		defer wg.Done()
-		result, err := services.GetAllProjects(barangay_ID, categoryID, limit, page)
+		result, err := h.svc.GetAllProjects(barangay_ID, categoryID, limit, page)
 		if err != nil {
 			mu.Lock()
 			errors = append(errors, err)
@@ -124,7 +132,7 @@ func GetAllProjects(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"projects": projectList, "category": budgetCategory})
 }
 
-func UpdateProjectStatus(c *gin.Context){
+func (h *ProjectHandlers) UpdateProjectStatus(c *gin.Context){
 
     session := services.CheckAuthentication(c)
 
@@ -134,17 +142,17 @@ func UpdateProjectStatus(c *gin.Context){
     var newStatus models.NewProjectStatus
     services.BindJSON(c, &newStatus)
 
-    err := services.UpdateProjectStatus(projectID, barangay_ID, newStatus)
+    err := h.svc.UpdateProjectStatus(projectID, barangay_ID, newStatus)
     services.CheckServiceError(c, err)
 }
 
-func GetSingleProject(c *gin.Context){
+func (h *ProjectHandlers) GetSingleProject(c *gin.Context){
 
 	services.CheckAuthentication(c)
 
 	projectID := c.Param("projectID")
 
-	project, err := services.GetProjectSingle(projectID)
+	project, err := h.svc.GetProjectSingle(projectID)
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"data": project, "message": "Project " + project.Name +" Retrieved"})

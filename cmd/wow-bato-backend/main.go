@@ -64,6 +64,9 @@ func main() {
 	feedbackReplyService := services.NewFeedbackReplyService(db)
 	feedbackReplyHandlers := handlers.NewFeedbackReplyHandlers(feedbackReplyService)
 
+	projectService := services.NewProjectService(db)
+	projectHandlers := handlers.NewProjectHandlers(projectService)
+
 	v1 := router.Group("/api/v1")
 	{
 		routes.RegisterUserRoute(v1, userHandler)
@@ -74,7 +77,7 @@ func main() {
 
 		routes.RegisterBudgetItemRoutes(v1, budgetItemHandler)
 
-		routes.RegisterProjectRoutes(v1)
+		routes.RegisterProjectRoutes(v1, projectHandlers)
 
 		routes.RegisterFeedbackRoutes(v1, feedbackHandler)
 

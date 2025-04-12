@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterProjectRoutes(router *gin.RouterGroup) {
+func RegisterProjectRoutes(router *gin.RouterGroup, handlers *handlers.ProjectHandlers) {
 	project := router.Group("/project")
 	{
 		project.POST("/add/:categoryID", handlers.AddNewProject)
