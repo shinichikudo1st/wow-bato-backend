@@ -10,32 +10,40 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AddBudgetCategory(c *gin.Context){
+type BudgetCategoryHandlers struct {
+	svc *services.BudgetCategoryService
+}
+
+func NewBudgetCategoryHandlers(svc *services.BudgetCategoryService) *BudgetCategoryHandlers {
+	return &BudgetCategoryHandlers{svc: svc}
+}
+
+func (h *BudgetCategoryHandlers) AddBudgetCategory(c *gin.Context){
 	
 	services.CheckAuthentication(c)
 
 	var newBudgetCategory models.NewBudgetCategory
 	services.BindJSON(c, &newBudgetCategory)
 
-	err := services.AddBudgetCategory(newBudgetCategory)
+	err := h.svc.AddBudgetCategory(newBudgetCategory)
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "New Budget Category Added"})
 }
 
-func DeleteBudgetCategory(c *gin.Context){
+func (h *BudgetCategoryHandlers) DeleteBudgetCategory(c *gin.Context){
 
 	services.CheckAuthentication(c)
 
 	budget_ID := c.Param("budget_ID")
 
-	err := services.DeleteBudgetCategory(budget_ID)
+	err := h.svc.DeleteBudgetCategory(budget_ID)
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Deleted"})
 }
 
-func UpdateBudgetCategory(c *gin.Context){
+func (h *BudgetCategoryHandlers) UpdateBudgetCategory(c *gin.Context){
 
 	services.CheckAuthentication(c)
 
@@ -44,13 +52,13 @@ func UpdateBudgetCategory(c *gin.Context){
 	var updateBudgetCategory models.UpdateBudgetCategory
 	services.BindJSON(c, &updateBudgetCategory)
 
-	err := services.UpdateBudgetCategory(budget_ID, updateBudgetCategory)
+	err := h.svc.UpdateBudgetCategory(budget_ID, updateBudgetCategory)
 	services.CheckServiceError(c, err)
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Budget Category Updated"})
 }
 
-func GetAllBudgetCategory(c *gin.Context) {
+func (h *BudgetCategoryHandlers) GetAllBudgetCategory(c *gin.Context) {
 	
 	services.CheckAuthentication(c)
 
@@ -71,7 +79,7 @@ func GetAllBudgetCategory(c *gin.Context) {
 
 	go func() {
 		defer wg.Done()
-		result, err := services.GetAllBudgetCategory(barangay_ID, limit, page)
+		result, err := h.svc.GetAllBudgetCategory(barangay_ID, limit, page)
 		if err != nil {
 			mu.Lock()
 			errors = append(errors, err)
@@ -85,7 +93,7 @@ func GetAllBudgetCategory(c *gin.Context) {
 
 	go func() {
 		defer wg.Done()
-		result, err := services.GetBudgetCategoryCount(barangay_ID)
+		result, err := h.svc.GetBudgetCategoryCount(barangay_ID)
 		if err != nil {
 			mu.Lock()
 			errors = append(errors, err)
@@ -111,14 +119,14 @@ func GetAllBudgetCategory(c *gin.Context) {
 	})
 }
 
-func GetSingleBudgetCategory(c *gin.Context){
+func (h *BudgetCategoryHandlers) GetSingleBudgetCategory(c *gin.Context){
 	
 	session := services.CheckAuthentication(c)
 
 	barangay_ID := session.Get("barangay_id").(uint)
 	budget_ID := c.Param("budget_ID")
 
-	budgetCategory, err := services.GetBudgetCategory(barangay_ID, budget_ID)
+	budgetCategory, err := h.svc.GetBudgetCategory(barangay_ID, budget_ID)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

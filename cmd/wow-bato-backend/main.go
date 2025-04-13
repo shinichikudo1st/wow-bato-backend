@@ -63,9 +63,13 @@ func main() {
 
 	feedbackReplyService := services.NewFeedbackReplyService(db)
 	feedbackReplyHandlers := handlers.NewFeedbackReplyHandlers(feedbackReplyService)
+	
+	budgetCategoryService := services.NewBudgetCategoryService(db)
+	budgetCategoryHandlers := handlers.NewBudgetCategoryHandlers(budgetCategoryService)
 
 	projectService := services.NewProjectService(db)
-	projectHandlers := handlers.NewProjectHandlers(projectService)
+	projectHandlers := handlers.NewProjectHandlers(projectService, budgetCategoryService)
+
 
 	v1 := router.Group("/api/v1")
 	{
@@ -73,7 +77,7 @@ func main() {
 
 		routes.RegisterBarangayRoute(v1, barangayHandler)
 
-		routes.RegisterBudgetCategoryRoutes(v1)
+		routes.RegisterBudgetCategoryRoutes(v1, budgetCategoryHandlers)
 
 		routes.RegisterBudgetItemRoutes(v1, budgetItemHandler)
 

@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	database "wow-bato-backend/internal"
 	"wow-bato-backend/internal/models"
+
+	"gorm.io/gorm"
 )
 
 var (
@@ -17,7 +18,15 @@ var (
 	ErrorInvalidBarangayID     = errors.New("invalid barangay ID format")
 )
 
-func validateBudgetCategory(category models.NewBudgetCategory) error {
+type BudgetCategoryService struct {
+	db *gorm.DB
+}
+
+func NewBudgetCategoryService(db *gorm.DB) *BudgetCategoryService {
+	return &BudgetCategoryService{db: db}
+}
+
+func (s *BudgetCategoryService) validateBudgetCategory(category models.NewBudgetCategory) error {
 	if category.Name == "" {
 		return ErrEmptyBudgetCategoryName
 	}
@@ -30,14 +39,9 @@ func validateBudgetCategory(category models.NewBudgetCategory) error {
 	return nil
 }
 
-func AddBudgetCategory(budgetCategory models.NewBudgetCategory) error {
-	if err := validateBudgetCategory(budgetCategory); err != nil {
+func (s *BudgetCategoryService) AddBudgetCategory(budgetCategory models.NewBudgetCategory) error {
+	if err := s.validateBudgetCategory(budgetCategory); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
-	}
-
-	db, err := database.ConnectDB()
-	if err != nil {
-		return fmt.Errorf("database connection failed: %w", err)
 	}
 
 	newBudgetCategory := models.Budget_Category{
@@ -46,25 +50,21 @@ func AddBudgetCategory(budgetCategory models.NewBudgetCategory) error {
 		Barangay_ID: budgetCategory.Barangay_ID,
 	}
 
-	if result := db.Create(&newBudgetCategory); result.Error != nil {
+	if result := s.db.Create(&newBudgetCategory); result.Error != nil {
 		return fmt.Errorf("failed to create budget category: %w", result.Error)
 	}
 
 	return nil
 }
 
-func DeleteBudgetCategory(budget_ID string) error {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return fmt.Errorf("database connection failed: %w", err)
-	}
+func (s *BudgetCategoryService) DeleteBudgetCategory(budget_ID string) error {
 
 	budget_ID_int, err := strconv.Atoi(budget_ID)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrInvalidBudgetCategoryID, budget_ID)
 	}
 
-	result := db.Where("id = ?", budget_ID_int).Delete(&models.Budget_Category{})
+	result := s.db.Where("id = ?", budget_ID_int).Delete(&models.Budget_Category{})
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete budget category: %w", result.Error)
 	}
@@ -76,17 +76,12 @@ func DeleteBudgetCategory(budget_ID string) error {
 	return nil
 }
 
-func UpdateBudgetCategory(budget_ID string, updateBudgetCategory models.UpdateBudgetCategory) error {
+func (s *BudgetCategoryService) UpdateBudgetCategory(budget_ID string, updateBudgetCategory models.UpdateBudgetCategory) error {
 	if updateBudgetCategory.Name == "" {
 		return ErrEmptyBudgetCategoryName
 	}
 	if updateBudgetCategory.Description == "" {
 		return ErrEmptyBudgetDescription
-	}
-
-	db, err := database.ConnectDB()
-	if err != nil {
-		return fmt.Errorf("database connection failed: %w", err)
 	}
 
 	budget_ID_int, err := strconv.Atoi(budget_ID)
@@ -95,25 +90,21 @@ func UpdateBudgetCategory(budget_ID string, updateBudgetCategory models.UpdateBu
 	}
 
 	var budgetCategory models.Budget_Category
-	if err := db.Where("id = ?", budget_ID_int).First(&budgetCategory).Error; err != nil {
+	if err := s.db.Where("id = ?", budget_ID_int).First(&budgetCategory).Error; err != nil {
 		return fmt.Errorf("%w: ID %d", ErrBudgetCategoryNotFound, budget_ID_int)
 	}
 
 	budgetCategory.Name = updateBudgetCategory.Name
 	budgetCategory.Description = updateBudgetCategory.Description
 
-	if result := db.Save(&budgetCategory); result.Error != nil {
+	if result := s.db.Save(&budgetCategory); result.Error != nil {
 		return fmt.Errorf("failed to update budget category: %w", result.Error)
 	}
 
 	return nil
 }
 
-func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]models.BudgetCategoryResponse, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return nil, fmt.Errorf("database connection failed: %w", err)
-	}
+func (s *BudgetCategoryService) GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]models.BudgetCategoryResponse, error) {
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
@@ -137,7 +128,7 @@ func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]mode
 	offset := (pageInt - 1) * limitInt
 
 	var budgetCategory []models.BudgetCategoryResponse
-	result := db.Model(&models.Budget_Category{}).
+	result := s.db.Model(&models.Budget_Category{}).
 		Select("budget_categories.id, budget_categories.name, budget_categories.description, budget_categories.barangay_ID, COUNT(projects.id) as project_count").
 		Joins("LEFT JOIN projects ON projects.category_id = budget_categories.id").
 		Where("budget_categories.barangay_ID = ?", barangay_ID_int).
@@ -153,11 +144,7 @@ func GetAllBudgetCategory(barangay_ID string, limit string, page string) ([]mode
 	return budgetCategory, nil
 }
 
-func GetBudgetCategoryCount(barangay_ID string) (int64, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return 0, fmt.Errorf("database connection failed: %w", err)
-	}
+func (s *BudgetCategoryService) GetBudgetCategoryCount(barangay_ID string) (int64, error) {
 
 	barangay_ID_int, err := strconv.Atoi(barangay_ID)
 	if err != nil {
@@ -165,18 +152,14 @@ func GetBudgetCategoryCount(barangay_ID string) (int64, error) {
 	}
 
 	var count int64
-	if err := db.Model(&models.Budget_Category{}).Where("barangay_ID = ?", barangay_ID_int).Count(&count).Error; err != nil {
+	if err := s.db.Model(&models.Budget_Category{}).Where("barangay_ID = ?", barangay_ID_int).Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("failed to count budget categories: %w", err)
 	}
 
 	return count, nil
 }
 
-func GetBudgetCategory(barangay_ID uint, budget_ID string) (models.DisplayBudgetCategory, error) {
-	db, err := database.ConnectDB()
-	if err != nil {
-		return models.DisplayBudgetCategory{}, fmt.Errorf("database connection failed: %w", err)
-	}
+func (s *BudgetCategoryService) GetBudgetCategory(barangay_ID uint, budget_ID string) (models.DisplayBudgetCategory, error) {
 
 	budget_ID_int, err := strconv.Atoi(budget_ID)
 	if err != nil {
@@ -184,7 +167,7 @@ func GetBudgetCategory(barangay_ID uint, budget_ID string) (models.DisplayBudget
 	}
 
 	var budgetCategory models.DisplayBudgetCategory
-	result := db.Model(&models.Budget_Category{}).
+	result := s.db.Model(&models.Budget_Category{}).
 		Where("barangay_ID = ? AND id = ?", barangay_ID, budget_ID_int).
 		Scan(&budgetCategory)
 

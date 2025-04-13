@@ -11,10 +11,11 @@ import (
 
 type ProjectHandlers struct {
 	svc *services.ProjectService
+	budget *services.BudgetCategoryService
 }
 
-func NewProjectHandlers(svc *services.ProjectService) *ProjectHandlers {
-	return &ProjectHandlers{svc: svc}
+func NewProjectHandlers(svc *services.ProjectService, budget *services.BudgetCategoryService) *ProjectHandlers {
+	return &ProjectHandlers{svc: svc, budget: budget}
 }
 
 func (h *ProjectHandlers) AddNewProject(c *gin.Context){
@@ -110,7 +111,7 @@ func (h *ProjectHandlers) GetAllProjects(c *gin.Context){
 
 	go func(){
 		defer wg.Done()
-		result, err := services.GetBudgetCategory(barangay_ID, categoryID)
+		result, err := h.budget.GetBudgetCategory(barangay_ID, categoryID)
 		if err != nil {
 			mu.Lock()
 			errors = append(errors, err)

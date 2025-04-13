@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterBudgetCategoryRoutes(router *gin.RouterGroup) {
+func RegisterBudgetCategoryRoutes(router *gin.RouterGroup, handlers *handlers.BudgetCategoryHandlers) {
 	budgetCategory := router.Group("/budgetCategory")
 	{
 		budgetCategory.POST("/add", handlers.AddBudgetCategory)
