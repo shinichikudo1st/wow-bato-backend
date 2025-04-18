@@ -1,12 +1,22 @@
 package services
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 	"time"
 	"wow-bato-backend/internal/models"
 
 	"gorm.io/gorm"
 )
+
+var (
+	GO_DATE_FORMAT = "2006-01-02"
+	ErrParseStartDate = errors.New("something went wrong while parsing start date")  
+	ErrParseEndDate = errors.New("something went wrong while parsing end date") 
+	ErrProjectUpdate = errors.New("project to update not found")	
+)
+
 
 type ProjectService struct {
 	db *gorm.DB
@@ -23,16 +33,16 @@ func (s *ProjectService) AddNewProject(barangay_ID uint, categoryID string, newP
 		return err
 	}
 
-	layout := "2006-01-02"
+	layout := GO_DATE_FORMAT
 
 	startDate, err := time.Parse(layout, newProject.StartDate)
 	if err != nil {
-		return err
+		return ErrParseStartDate
 	}
 
 	endDate, err := time.Parse(layout, newProject.EndDate)
 	if err != nil {
-		return err
+		return ErrParseEndDate
 	}
 
 	project := models.Project{
@@ -71,7 +81,7 @@ func (s *ProjectService) UpdateProject(barangay_ID uint, projectID string, updat
 
 	var project models.Project
 	if err := s.db.Where("Barangay_ID = ? AND id = ?", barangay_ID, projectID_int).Error; err != nil {
-		return err
+		return fmt.Errorf("update failed: %w", ErrProjectUpdate)
 	}
 
 	project.Name = updateProject.Name
@@ -108,7 +118,7 @@ func (s *ProjectService) GetAllProjects(barangay_ID uint, categoryID string, lim
 		Limit(limit_int).
 		Offset(offset).
 		Scan(&projects).Error; err != nil {
-		return []models.ProjectList{}, err
+		return []models.ProjectList{}, fmt.Errorf("failed to retrieve all projects: %w", err)
 	}
 
 	return projects, nil
@@ -123,7 +133,7 @@ func (s *ProjectService) UpdateProjectStatus(projectID string, barangay_ID uint,
 
 	var project models.Project
 	if err := s.db.Where("Barangay_ID = ? AND id = ?", barangay_ID, projectID_int).First(&project).Error; err != nil {
-		return err
+		return fmt.Errorf("project not found: %w", err)
 	}
 
 	if newStatus.Status == "ongoing" {
@@ -153,7 +163,7 @@ func (s *ProjectService) GetProjectSingle(projectID string)(models.ProjectList, 
 
 	var project models.ProjectList
 	if err := s.db.Model(&models.Project{}).Where("id = ?", projectID_int).First(&project).Error; err != nil {
-		return models.ProjectList{}, err
+		return models.ProjectList{}, fmt.Errorf("Project not found: %w", err)
 	}
 
 	return project, nil
