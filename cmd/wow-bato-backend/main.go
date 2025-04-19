@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	database "wow-bato-backend/internal"
@@ -13,7 +14,45 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"gorm.io/gorm"
 )
+
+type App struct {
+	DB                     *gorm.DB
+    BarangayHandlers       *handlers.BarangayHandlers
+    UserHandlers           *handlers.UserHandlers
+    BudgetItemHandlers     *handlers.BudgetItemHandlers
+    FeedbackHandlers       *handlers.FeedbackHandlers
+    FeedbackReplyHandlers  *handlers.FeedbackReplyHandlers
+    BudgetCategoryHandlers *handlers.BudgetCategoryHandlers
+    ProjectHandlers        *handlers.ProjectHandlers
+}
+
+func NewApp() (*App, error) {
+    db, err := database.ConnectDB()
+    if err != nil {
+        return nil, fmt.Errorf("failed to connect to database: %w", err)
+    }
+
+    barangayService := services.NewBarangayService(db)
+    userService := services.NewUserService(db)
+    budgetItemService := services.NewBudgetItemService(db)
+    feedbackService := services.NewFeedbackService(db)
+    feedbackReplyService := services.NewFeedbackReplyService(db)
+    budgetCategoryService := services.NewBudgetCategoryService(db)
+    projectService := services.NewProjectService(db)
+
+    return &App{
+        DB:                     db,
+        BarangayHandlers:       handlers.NewBarangayHandlers(barangayService),
+        UserHandlers:           handlers.NewUserHandlers(userService),
+        BudgetItemHandlers:     handlers.NewBudgetItemHandlers(budgetItemService),
+        FeedbackHandlers:       handlers.NewFeedbackHandlers(feedbackService),
+        FeedbackReplyHandlers:  handlers.NewFeedbackReplyHandlers(feedbackReplyService),
+        BudgetCategoryHandlers: handlers.NewBudgetCategoryHandlers(budgetCategoryService),
+        ProjectHandlers:        handlers.NewProjectHandlers(projectService, budgetCategoryService),
+    }, nil
+}
 
 func main() {
 	err := godotenv.Load(".env")
@@ -21,9 +60,9 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-    db, err := database.ConnectDB()
+    app, err := NewApp()
     if err != nil {
-        log.Fatalf("Failed to connect to database: %v", err)
+        log.Fatalf("Failed to initialize app: %v", err)
     }
 
 	router := gin.Default()
@@ -49,43 +88,16 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	barangayService := services.NewBarangayService(db)
-	barangayHandler := handlers.NewBarangayHandlers(barangayService)
-
-	userService := services.NewUserService(db)
-	userHandler := handlers.NewUserHandlers(userService)
-
-	budgetItemService := services.NewBudgetItemService(db)
-	budgetItemHandler := handlers.NewBudgetItemHandlers(budgetItemService)
-
-	feedbackService := services.NewFeedbackService(db)
-	feedbackHandler := handlers.NewFeedbackHandlers(feedbackService)
-
-	feedbackReplyService := services.NewFeedbackReplyService(db)
-	feedbackReplyHandlers := handlers.NewFeedbackReplyHandlers(feedbackReplyService)
-	
-	budgetCategoryService := services.NewBudgetCategoryService(db)
-	budgetCategoryHandlers := handlers.NewBudgetCategoryHandlers(budgetCategoryService)
-
-	projectService := services.NewProjectService(db)
-	projectHandlers := handlers.NewProjectHandlers(projectService, budgetCategoryService)
-
 
 	v1 := router.Group("/api/v1")
 	{
-		routes.RegisterUserRoute(v1, userHandler)
-
-		routes.RegisterBarangayRoute(v1, barangayHandler)
-
-		routes.RegisterBudgetCategoryRoutes(v1, budgetCategoryHandlers)
-
-		routes.RegisterBudgetItemRoutes(v1, budgetItemHandler)
-
-		routes.RegisterProjectRoutes(v1, projectHandlers)
-
-		routes.RegisterFeedbackRoutes(v1, feedbackHandler)
-
-		routes.RegisterFeedbackReplyRoutes(v1, feedbackReplyHandlers)
+		routes.RegisterUserRoute(v1, app.UserHandlers)
+		routes.RegisterBarangayRoute(v1, app.BarangayHandlers)
+		routes.RegisterBudgetCategoryRoutes(v1, app.BudgetCategoryHandlers)
+		routes.RegisterBudgetItemRoutes(v1, app.BudgetItemHandlers)
+		routes.RegisterProjectRoutes(v1, app.ProjectHandlers)
+		routes.RegisterFeedbackRoutes(v1, app.FeedbackHandlers)
+		routes.RegisterFeedbackReplyRoutes(v1, app.FeedbackReplyHandlers)
 	}
 
 	router.Run(":8080")

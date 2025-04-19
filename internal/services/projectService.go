@@ -163,7 +163,7 @@ func (s *ProjectService) GetProjectSingle(projectID string)(models.ProjectList, 
 
 	var project models.ProjectList
 	if err := s.db.Model(&models.Project{}).Where("id = ?", projectID_int).First(&project).Error; err != nil {
-		return models.ProjectList{}, fmt.Errorf("Project not found: %w", err)
+		return models.ProjectList{}, fmt.Errorf("project not found: %w", err)
 	}
 
 	return project, nil
