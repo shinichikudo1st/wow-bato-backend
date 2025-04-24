@@ -49,6 +49,17 @@ func validateUserRegistration(user models.RegisterUser) error {
 	return nil
 }
 
+func validateLoginUser(loginUser models.LoginUser) (models.UserStruct, error){
+	if loginUser.Email == "" {
+		return models.UserStruct{}, ErrEmptyEmail
+	}
+	if loginUser.Password == "" {
+		return models.UserStruct{}, ErrEmptyPassword
+	}
+
+	return models.UserStruct{}, nil
+}
+
 func (s *UserService) RegisterUser(registerUser models.RegisterUser) error {
 	if err := validateUserRegistration(registerUser); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
@@ -84,12 +95,8 @@ func (s *UserService) RegisterUser(registerUser models.RegisterUser) error {
 }
 
 func (s *UserService) LoginUser(loginUser models.LoginUser) (models.UserStruct, error) {
-	if loginUser.Email == "" {
-		return models.UserStruct{}, ErrEmptyEmail
-	}
-	if loginUser.Password == "" {
-		return models.UserStruct{}, ErrEmptyPassword
-	}
+
+	validateLoginUser(loginUser)
 
 	var user models.UserStruct
 	if err := s.db.Model(&models.User{}).

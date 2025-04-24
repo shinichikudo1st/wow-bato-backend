@@ -11,6 +11,10 @@ type BudgetItemService struct {
 	db *gorm.DB
 }
 
+var (
+	PAGE_LIMIT = 5
+)
+
 func NewBudgetItemService (db *gorm.DB) *BudgetItemService {
 	return &BudgetItemService{db: db}
 }
@@ -47,7 +51,7 @@ func (s *BudgetItemService) GetAllBudgetItem(projectID string, filter string, pa
 		return []models.Budget_Item{}, err
 	}
 
-	limit := 5 // temporary hardcoded
+	limit := PAGE_LIMIT
 
 	offset := (page_int - 1) * limit
 
