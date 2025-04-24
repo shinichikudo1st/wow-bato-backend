@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"wow-bato-backend/internal/models"
 
 	"github.com/gin-contrib/sessions"
@@ -53,4 +54,13 @@ func CheckAuthentication(c *gin.Context) sessions.Session{
 	}
 
 	return session
+}
+
+func ConvertToInt(stringData string) (int, error) {
+	data, err := strconv.Atoi(stringData)
+	if err != nil {
+		return 0, err
+	}
+
+	return data, nil
 }

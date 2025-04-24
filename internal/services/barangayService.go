@@ -3,7 +3,6 @@ package services
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"wow-bato-backend/internal/models"
 
 	"gorm.io/gorm"
@@ -59,7 +58,7 @@ func (s *BarangayService) AddNewBarangay(newBarangay models.AddBarangay) error {
 
 func (s *BarangayService) DeleteBarangay(barangay_ID string) error {
 
-	barangay_ID_int, err := strconv.Atoi(barangay_ID)
+	barangay_ID_int, err := ConvertToInt(barangay_ID)
 	if err != nil {
 		return err
 	}
@@ -74,7 +73,7 @@ func (s *BarangayService) DeleteBarangay(barangay_ID string) error {
 
 func (s *BarangayService) UpdateBarangay(barangay_ID string, barangayUpdate models.UpdateBarangay) error {
 
-	barangay_ID_int, err := strconv.Atoi(barangay_ID)
+	barangay_ID_int, err := ConvertToInt(barangay_ID)
 	if err != nil {
 		return err
 	}
@@ -106,12 +105,12 @@ func (s *BarangayService) UpdateBarangay(barangay_ID string, barangayUpdate mode
 
 func (s *BarangayService) GetAllBarangay(limit string, page string) ([]models.AllBarangayResponse, error) {
 
-	limitInt, err := strconv.Atoi(limit)
+	limitInt, err := ConvertToInt(limit)
 	if err != nil {
 		return nil, err
 	}
 
-	pageInt, err := strconv.Atoi(page)
+	pageInt, err := ConvertToInt(page)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +141,7 @@ func (s *BarangayService) OptionBarangay() ([]models.OptionBarangay, error) {
 
 func (s *BarangayService) GetSingleBarangay(barangay_ID string) (models.AllBarangayResponse, error) {
 
-	barangay_ID_int, err := strconv.Atoi(barangay_ID)
+	barangay_ID_int, err := ConvertToInt(barangay_ID)
 	if err != nil {
 		return models.AllBarangayResponse{}, fmt.Errorf("%w: %s", ErrInvalidBarangayID, barangay_ID)
 	}
