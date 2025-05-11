@@ -57,3 +57,49 @@ func TestBarangayService_AddNewBarangay(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestBarangayService_DeleteBarangay(t *testing.T) {
+	// Create a new SQL mock
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	// Connect GORM to the mock database
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	// Create the service with the mocked database
+	svc := NewBarangayService(gormDB)
+	barangayID := "1" // Test with a valid ID
+
+	// Setup expectations - match what GORM is actually doing
+	mock.ExpectBegin()
+	mock.ExpectExec(`DELETE FROM "barangays" WHERE id = \$1`).
+		WithArgs(1).                              // The numeric ID after conversion
+		WillReturnResult(sqlmock.NewResult(0, 1)) // 1 row affected
+	mock.ExpectCommit()
+
+	// Call the method
+	err = svc.DeleteBarangay(barangayID)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// Verify all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
