@@ -146,3 +146,77 @@ func TestUserService_LoginUser(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestUserService_GetUserProfile(t *testing.T) {
+	// Create a new SQL mock
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	// Connect GORM to the mock database
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	// Create the service with the mocked database
+	svc := NewUserService(gormDB)
+
+	// Test user ID
+	userID := uint(1)
+
+	// Mock user profile data retrieval
+	profileRows := sqlmock.NewRows([]string{"id", "email", "first_name", "last_name", "role", "contact"}).
+		AddRow(1, "test@example.com", "Test", "User", "user", "1234567890")
+
+	mock.ExpectQuery(`SELECT id, email, first_name, last_name, role, contact FROM "users" WHERE id = \$1`).
+		WithArgs(userID).
+		WillReturnRows(profileRows)
+
+	// Call the method
+	result, err := svc.GetUserProfile(userID)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// Verify results
+	if result.ID != 1 {
+		t.Errorf("Expected user ID 1, got %d", result.ID)
+	}
+
+	if result.Email != "test@example.com" {
+		t.Errorf("Expected email 'test@example.com', got %s", result.Email)
+	}
+
+	if result.FirstName != "Test" {
+		t.Errorf("Expected first name 'Test', got %s", result.FirstName)
+	}
+
+	if result.LastName != "User" {
+		t.Errorf("Expected last name 'User', got %s", result.LastName)
+	}
+
+	if result.Role != "user" {
+		t.Errorf("Expected role 'user', got %s", result.Role)
+	}
+
+	if result.Contact != "1234567890" {
+		t.Errorf("Expected contact '1234567890', got %s", result.Contact)
+	}
+
+	// Verify all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
