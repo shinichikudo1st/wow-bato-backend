@@ -64,3 +64,85 @@ func TestUserService_RegisterUser(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestUserService_LoginUser(t *testing.T) {
+	// Create a new SQL mock
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	// Connect GORM to the mock database
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	// Create the service with the mocked database
+	svc := NewUserService(gormDB)
+
+	// Create a hashed password for testing
+	hashedPassword, err := HashPassword("password123")
+	if err != nil {
+		t.Fatalf("Failed to hash password: %v", err)
+	}
+
+	loginUser := models.LoginUser{
+		Email:    "test@example.com",
+		Password: "password123",
+	}
+
+	// Mock user data retrieval
+	userRows := sqlmock.NewRows([]string{"id", "password", "role", "barangay_id"}).
+		AddRow(1, hashedPassword, "user", 1)
+
+	mock.ExpectQuery(`SELECT id, password, role, barangay_id FROM "users" WHERE email = \$1`).
+		WithArgs("test@example.com").
+		WillReturnRows(userRows)
+
+	// Mock barangay data retrieval
+	barangayRows := sqlmock.NewRows([]string{"name"}).
+		AddRow("Test Barangay")
+
+	mock.ExpectQuery(`SELECT name FROM "barangays" WHERE id = \$1`).
+		WithArgs(1).
+		WillReturnRows(barangayRows)
+
+	// Call the method
+	result, err := svc.LoginUser(loginUser)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// Verify results
+	if result.ID != 1 {
+		t.Errorf("Expected user ID 1, got %d", result.ID)
+	}
+
+	if result.Role != "user" {
+		t.Errorf("Expected role 'user', got %s", result.Role)
+	}
+
+	if result.Barangay_ID != 1 {
+		t.Errorf("Expected barangay ID 1, got %d", result.Barangay_ID)
+	}
+
+	if result.Barangay_Name != "Test Barangay" {
+		t.Errorf("Expected barangay name 'Test Barangay', got %s", result.Barangay_Name)
+	}
+
+	// Verify all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
