@@ -232,3 +232,70 @@ func TestBarangayService_GetAllBarangay(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestBarangayService_GetSingleBarangay(t *testing.T) {
+	// Create a new SQL mock
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	// Connect GORM to the mock database
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	// Create the service with the mocked database
+	svc := NewBarangayService(gormDB)
+
+	// Test parameter
+	barangayID := "1"
+
+	// Setup mock row
+	rows := sqlmock.NewRows([]string{"id", "name", "city", "region"}).
+		AddRow(1, "Test Barangay", "Test City", "Test Region")
+
+	// Expect query for a single barangay by ID
+	mock.ExpectQuery(`SELECT (.+) FROM "barangays" WHERE ID = \$1`).
+		WithArgs(1).
+		WillReturnRows(rows)
+
+	// Call the method
+	result, err := svc.GetSingleBarangay(barangayID)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// Check result
+	if result.ID != 1 {
+		t.Errorf("Expected ID 1, got %d", result.ID)
+	}
+
+	if result.Name != "Test Barangay" {
+		t.Errorf("Expected name 'Test Barangay', got %s", result.Name)
+	}
+
+	if result.City != "Test City" {
+		t.Errorf("Expected city 'Test City', got %s", result.City)
+	}
+
+	if result.Region != "Test Region" {
+		t.Errorf("Expected region 'Test Region', got %s", result.Region)
+	}
+
+	// Verify all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
