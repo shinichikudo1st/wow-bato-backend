@@ -110,3 +110,63 @@ func TestBudgetCategoryService_DeleteBudgetCategory(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestBudgetCategoryService_UpdateBudgetCategory(t *testing.T) {
+	// Create a new SQL mock
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	// Connect GORM to the mock database
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	// Create the service with the mocked database
+	svc := NewBudgetCategoryService(gormDB)
+
+	// Test data
+	categoryID := "1"
+	updateData := models.UpdateBudgetCategory{
+		Name:        "Updated Category",
+		Description: "Updated Description",
+	}
+
+	// Setup expectations for finding the category first
+	findRows := sqlmock.NewRows([]string{"id", "name", "description", "barangay_id"}).
+		AddRow(1, "Old Category", "Old Description", 1)
+
+	mock.ExpectQuery(`SELECT (.+) FROM "budget_categories" WHERE id = \$1`).
+		WithArgs(1).
+		WillReturnRows(findRows)
+
+	// Setup expectations for the update operation
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "budget_categories" SET (.+) WHERE "id" = \$`).
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), "Updated Category", "Updated Description", 1).
+		WillReturnResult(sqlmock.NewResult(0, 1)) // 1 row affected
+	mock.ExpectCommit()
+
+	// Call the method
+	err = svc.UpdateBudgetCategory(categoryID, updateData)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// Verify all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
