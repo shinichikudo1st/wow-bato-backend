@@ -355,3 +355,71 @@ func TestProjectService_UpdateProjectStatus(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestProjectService_GetProjectSingle(t *testing.T) {
+	// Create a new SQL mock
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	// Connect GORM to the mock database
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	// Create the service with the mocked database
+	svc := NewProjectService(gormDB)
+
+	// Test parameter
+	projectID := "10"
+
+	// Setup mock row (dates as string, as per ProjectList struct)
+	startDate := "2023-01-01"
+	endDate := "2023-12-31"
+	row := sqlmock.NewRows([]string{"id", "name", "status", "start_date", "end_date"}).
+		AddRow(10, "Test Project", "completed", startDate, endDate)
+
+	mock.ExpectQuery(`SELECT (.+) FROM "projects" WHERE id = \$1`).
+		WithArgs(10).
+		WillReturnRows(row)
+
+	// Call the method
+	result, err := svc.GetProjectSingle(projectID)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// Verify result
+	if result.ID != 10 {
+		t.Errorf("Expected ID 10, got %d", result.ID)
+	}
+	if result.Name != "Test Project" {
+		t.Errorf("Expected name 'Test Project', got %s", result.Name)
+	}
+	if result.Status != "completed" {
+		t.Errorf("Expected status 'completed', got %s", result.Status)
+	}
+	if result.StartDate != startDate {
+		t.Errorf("Expected start date %s, got %s", startDate, result.StartDate)
+	}
+	if result.EndDate != endDate {
+		t.Errorf("Expected end date %s, got %s", endDate, result.EndDate)
+	}
+
+	// Verify all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
