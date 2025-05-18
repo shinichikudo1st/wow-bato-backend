@@ -293,3 +293,65 @@ func TestProjectService_GetAllProjects(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestProjectService_UpdateProjectStatus(t *testing.T) {
+	// Create a new SQL mock
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	// Connect GORM to the mock database
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	// Create the service with the mocked database
+	svc := NewProjectService(gormDB)
+
+	// Test parameters
+	projectID := "7"
+	barangayID := uint(1)
+	flexDate := time.Date(2024, 5, 1, 0, 0, 0, 0, time.UTC)
+	newStatus := models.NewProjectStatus{
+		Status:   "ongoing",
+		FlexDate: flexDate,
+	}
+
+	// Setup expectations for finding the project
+	rows := sqlmock.NewRows([]string{"id", "status", "start_date", "end_date"}).
+		AddRow(7, "planned", time.Time{}, time.Time{})
+
+	mock.ExpectQuery(`SELECT (.+) FROM "projects" WHERE Barangay_ID = \$1 AND id = \$2`).
+		WithArgs(barangayID, 7).
+		WillReturnRows(rows)
+
+	// Setup expectations for the update operation
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "projects" SET (.+) WHERE "id" = \$`).
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), "ongoing", flexDate, 7).
+		WillReturnResult(sqlmock.NewResult(0, 1)) // 1 row affected
+	mock.ExpectCommit()
+
+	// Call the method
+	err = svc.UpdateProjectStatus(projectID, barangayID, newStatus)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// Verify all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
