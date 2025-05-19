@@ -133,3 +133,56 @@ func TestFeedbackService_GetAllFeedback(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestFeedbackService_EditFeedback(t *testing.T) {
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	svc := NewFeedbackService(gormDB)
+
+	feedbackID := "5"
+	feedbackIDInt := 5
+
+	// Mock finding the feedback
+	findRows := sqlmock.NewRows([]string{"id", "content", "user_id", "role", "project_id"}).
+		AddRow(feedbackIDInt, "Old content", 1, "user", 1)
+	mock.ExpectQuery(`SELECT \* FROM "feedbacks" WHERE id = \$1 ORDER BY "feedbacks"."id" LIMIT 1`).
+		WithArgs(feedbackIDInt).
+		WillReturnRows(findRows)
+
+	// Mock the update (save) operation
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "feedbacks" SET (.+) WHERE "id" = \$1`).
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), "New content", feedbackIDInt).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	editedFeedback := models.NewFeedback{
+		Content: "New content",
+	}
+
+	err = svc.EditFeedback(feedbackID, editedFeedback)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
