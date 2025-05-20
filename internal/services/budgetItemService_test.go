@@ -208,3 +208,52 @@ func TestBudgetItemService_GetSingleBudgetItem(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestBudgetItemService_UpdateBudgetItemStatus(t *testing.T) {
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	svc := NewBudgetItemService(gormDB)
+
+	budgetItemID := "5"
+	newStatus := models.UpdateStatus{Status: "approve"}
+
+	// Mock finding the budget item
+	findRows := sqlmock.NewRows([]string{"id", "name", "amount_allocated", "description", "status", "project_id"}).
+		AddRow(5, "Item", 1000.0, "Desc", "Pending", 1)
+	mock.ExpectQuery(`SELECT \* FROM "budget_items" WHERE id = \$1 ORDER BY "budget_items"."id" LIMIT 1`).
+		WithArgs(5).
+		WillReturnRows(findRows)
+
+	// Mock the update (save) operation
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "budget_items" SET (.+) WHERE "id" = \$1`).
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), "Approved", 5).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	err = svc.UpdateBudgetItemStatus(budgetItemID, newStatus)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
