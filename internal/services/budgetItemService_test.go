@@ -63,3 +63,56 @@ func TestBudgetItemService_AddBudgetItem(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestBudgetItemService_GetAllBudgetItem(t *testing.T) {
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	svc := NewBudgetItemService(gormDB)
+
+	projectID := "1"
+	filter := "All"
+	page := "1"
+
+	// Setup mock rows
+	rows := sqlmock.NewRows([]string{"id", "name", "amount_allocated", "description", "status", "project_id"}).
+		AddRow(1, "Item 1", 500.0, "Desc 1", "Pending", 1).
+		AddRow(2, "Item 2", 1500.0, "Desc 2", "Approved", 1)
+
+	mock.ExpectQuery(`SELECT \* FROM "budget_items" WHERE project_id = \$1 LIMIT \$2 OFFSET \$3`).
+		WithArgs(1, 5, 0).
+		WillReturnRows(rows)
+
+	items, err := svc.GetAllBudgetItem(projectID, filter, page)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if len(items) != 2 {
+		t.Errorf("Expected 2 items, got %d", len(items))
+	}
+
+	if items[0].Name != "Item 1" || items[1].Name != "Item 2" {
+		t.Errorf("Unexpected item names: %s, %s", items[0].Name, items[1].Name)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
