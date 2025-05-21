@@ -110,3 +110,44 @@ func TestFeedbackReplyService_GetAllReplies(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestFeedbackReplyService_DeleteFeedbackReply(t *testing.T) {
+	var db *sql.DB
+	var mock sqlmock.Sqlmock
+	var err error
+
+	db, mock, err = sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	svc := NewFeedbackReplyService(gormDB)
+
+	replyID := "3"
+
+	// Mock the delete operation
+	mock.ExpectBegin()
+	mock.ExpectExec(`DELETE FROM "feedback_replies" WHERE id = \$1`).
+		WithArgs(3).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	err = svc.DeleteFeedbackReply(replyID)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
