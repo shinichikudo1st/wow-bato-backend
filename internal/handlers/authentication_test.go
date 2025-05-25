@@ -91,3 +91,60 @@ func TestRegisterUser(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestLoginUser(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	// Setup mock DB
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+
+	svc := services.NewUserService(gormDB)
+	handlersObj := handlers.NewUserHandlers(svc)
+
+	r := gin.Default()
+	r.POST("/login", handlersObj.LoginUser)
+
+	// Setup DB expectations for a successful login
+	hashedPassword, _ := services.HashPassword("password123")
+	mock.ExpectQuery(`SELECT id, password, role, barangay_id FROM "users" WHERE email = \$1`).
+		WithArgs("test@example.com").
+		WillReturnRows(sqlmock.NewRows([]string{"id", "password", "role", "barangay_id"}).
+			AddRow(1, hashedPassword, "resident", 1))
+	mock.ExpectQuery(`SELECT name FROM "barangays" WHERE id = \$1`).
+		WithArgs(1).
+		WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("Barangay Uno"))
+
+	// Prepare request body
+	loginReq := models.LoginUser{
+		Email:    "test@example.com",
+		Password: "password123",
+	}
+	jsonValue, _ := json.Marshal(loginReq)
+	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("User logged in successfully")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
