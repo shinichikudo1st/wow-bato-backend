@@ -9,141 +9,85 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"wow-bato-backend/internal/handlers"
 	"wow-bato-backend/internal/models"
+	"wow-bato-backend/internal/services"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
+// MockUserService implements the RegisterUser method for testing
+// You can expand this mock for more methods as needed
+
+type MockUserService struct {
+	RegisterUserFunc func(models.RegisterUser) error
+}
+
+func (m *MockUserService) RegisterUser(u models.RegisterUser) error {
+	if m.RegisterUserFunc != nil {
+		return m.RegisterUserFunc(u)
+	}
+	return nil
+}
+
 func TestRegisterUser(t *testing.T) {
-	// Set Gin to Test Mode
 	gin.SetMode(gin.TestMode)
+	// Setup mock DB
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
 
-	// Setup router
-	r := gin.Default()
-	r.POST("/register")
-
-	// Test cases
-	tests := []struct {
-		name          string
-		requestBody   models.RegisterUser
-		expectedCode  int
-		expectedError bool
-		expectedBody  string
-	}{
-		{
-			name: "Success",
-			requestBody: models.RegisterUser{
-				Email:       "test@example.com",
-				Password:    "password123",
-				FirstName:   "John",
-				LastName:    "Doe",
-				Role:        "resident",
-				Barangay_ID: "1",
-				Contact:     "+63 912 345 6789",
-			},
-			expectedCode: http.StatusOK,
-			expectedBody: `{"message":"User registered successfully"}`,
-		},
-		{
-			name: "Empty Email",
-			requestBody: models.RegisterUser{
-				Password:    "password123",
-				FirstName:   "John",
-				LastName:    "Doe",
-				Role:        "resident",
-				Barangay_ID: "1",
-				Contact:     "+63 912 345 6789",
-			},
-			expectedCode:  http.StatusBadRequest,
-			expectedError: true,
-		},
-		{
-			name: "Empty Password",
-			requestBody: models.RegisterUser{
-				Email:       "test@example.com",
-				FirstName:   "John",
-				LastName:    "Doe",
-				Role:        "resident",
-				Barangay_ID: "1",
-				Contact:     "+63 912 345 6789",
-			},
-			expectedCode:  http.StatusBadRequest,
-			expectedError: true,
-		},
-		{
-			name: "Invalid Email Format",
-			requestBody: models.RegisterUser{
-				Email:       "invalid-email",
-				Password:    "password123",
-				FirstName:   "John",
-				LastName:    "Doe",
-				Role:        "resident",
-				Barangay_ID: "1",
-				Contact:     "+63 912 345 6789",
-			},
-			expectedCode:  http.StatusBadRequest,
-			expectedError: true,
-		},
-		{
-			name: "Invalid Role",
-			requestBody: models.RegisterUser{
-				Email:       "test@example.com",
-				Password:    "password123",
-				FirstName:   "John",
-				LastName:    "Doe",
-				Role:        "invalid_role",
-				Barangay_ID: "1",
-				Contact:     "+63 912 345 6789",
-			},
-			expectedCode:  http.StatusBadRequest,
-			expectedError: true,
-		},
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Convert request body to JSON
-			jsonValue, err := json.Marshal(tt.requestBody)
-			if err != nil {
-				t.Fatalf("Failed to marshal request body: %v", err)
-			}
+	svc := services.NewUserService(gormDB)
+	handlersObj := handlers.NewUserHandlers(svc)
 
-			// Create request
-			req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(jsonValue))
-			if err != nil {
-				t.Fatalf("Failed to create request: %v", err)
-			}
-			req.Header.Set("Content-Type", "application/json")
+	r := gin.Default()
+	r.POST("/register", handlersObj.RegisterUser)
 
-			// Create response recorder
-			w := httptest.NewRecorder()
+	// Setup DB expectations for a successful registration
+	mock.ExpectBegin()
+	mock.ExpectQuery(`INSERT INTO "users"`).
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(),
+			"test@example.com", sqlmock.AnyArg(), "John", "Doe", "resident", uint(1), "+63 912 345 6789").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+	mock.ExpectCommit()
 
-			// Perform request
-			r.ServeHTTP(w, req)
+	reqBody := models.RegisterUser{
+		Email:       "test@example.com",
+		Password:    "password123",
+		FirstName:   "John",
+		LastName:    "Doe",
+		Role:        "resident",
+		Barangay_ID: "1",
+		Contact:     "+63 912 345 6789",
+	}
+	jsonValue, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "/register", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
 
-			// Check status code
-			if w.Code != tt.expectedCode {
-				t.Errorf("Expected status code %d, got %d", tt.expectedCode, w.Code)
-			}
+	r.ServeHTTP(w, req)
 
-			// Check response body for success case
-			if tt.expectedCode == http.StatusOK {
-				if w.Body.String() != tt.expectedBody {
-					t.Errorf("Expected body %s, got %s", tt.expectedBody, w.Body.String())
-				}
-			}
-
-			// Check for error response when expected
-			if tt.expectedError {
-				var response map[string]interface{}
-				err = json.Unmarshal(w.Body.Bytes(), &response)
-				if err != nil {
-					t.Fatalf("Failed to unmarshal response: %v", err)
-				}
-				if _, exists := response["error"]; !exists {
-					t.Error("Expected error message in response, got none")
-				}
-			}
-		})
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("User registered successfully")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }

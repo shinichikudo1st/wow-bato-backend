@@ -29,7 +29,7 @@ func (h *UserHandlers) RegisterUser(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }
 
-func (h *UserHandlers) LoginUser(c *gin.Context){
+func (h *UserHandlers) LoginUser(c *gin.Context) {
 	var loginUser models.LoginUser
 
 	services.BindJSON(c, &loginUser)
@@ -42,20 +42,19 @@ func (h *UserHandlers) LoginUser(c *gin.Context){
 
 	err = session.Save()
 	services.CheckServiceError(c, err)
-	
 
-    c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "sessionStatus": session.Get("authenticated"), "role": session.Get("user_role")})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "sessionStatus": session.Get("authenticated"), "role": session.Get("user_role")})
 
 }
 
-func (h *UserHandlers) LogoutUser(c *gin.Context){
+func (h *UserHandlers) LogoutUser(c *gin.Context) {
 
 	session := sessions.Default(c)
 	session.Clear()
 
 	session.Options(sessions.Options{
-		Path: "/",
-		MaxAge: -1,
+		Path:     "/",
+		MaxAge:   -1,
 		HttpOnly: true,
 	})
 
@@ -65,16 +64,15 @@ func (h *UserHandlers) LogoutUser(c *gin.Context){
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged out successfully"})
 }
 
-func (h *UserHandlers) CheckAuth(c *gin.Context){
-	
+func (h *UserHandlers) CheckAuth(c *gin.Context) {
 
 	session := services.CheckAuthentication(c)
 
-	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated"), "role": session.Get("user_role"), 
-	"user_id": session.Get("user_id"), "barangay_id": session.Get("barangay_id"), "barangay_name": session.Get("barangay_name")})
+	c.IndentedJSON(http.StatusOK, gin.H{"sessionStatus": session.Get("authenticated"), "role": session.Get("user_role"),
+		"user_id": session.Get("user_id"), "barangay_id": session.Get("barangay_id"), "barangay_name": session.Get("barangay_name")})
 }
 
-func (h *UserHandlers) GetUserProfile(c *gin.Context){
+func (h *UserHandlers) GetUserProfile(c *gin.Context) {
 
 	session := services.CheckAuthentication(c)
 
