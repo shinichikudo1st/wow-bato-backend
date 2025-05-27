@@ -11,7 +11,7 @@ import (
 )
 
 func TestUserService_RegisterUser(t *testing.T) {
-	// Create a new SQL mock
+	
 	var db *sql.DB
 	var mock sqlmock.Sqlmock
 	var err error
@@ -22,7 +22,6 @@ func TestUserService_RegisterUser(t *testing.T) {
 	}
 	defer db.Close()
 
-	// Connect GORM to the mock database
 	dialector := postgres.New(postgres.Config{
 		Conn:       db,
 		DriverName: "postgres",
@@ -33,7 +32,6 @@ func TestUserService_RegisterUser(t *testing.T) {
 		t.Fatalf("Failed to open gorm: %v", err)
 	}
 
-	// Create the service with the mocked database
 	svc := NewUserService(gormDB)
 	registerUser := models.RegisterUser{
 		Email:       "test@example.com",
@@ -45,7 +43,6 @@ func TestUserService_RegisterUser(t *testing.T) {
 		Contact:     "1234567890",
 	}
 
-	// Setup expectations - match what GORM is actually doing
 	mock.ExpectBegin()
 	mock.ExpectQuery(`INSERT INTO "users"`).
 		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(),
@@ -53,7 +50,6 @@ func TestUserService_RegisterUser(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 	mock.ExpectCommit()
 
-	// Call the method
 	err = svc.RegisterUser(registerUser)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -66,7 +62,6 @@ func TestUserService_RegisterUser(t *testing.T) {
 }
 
 func TestUserService_LoginUser(t *testing.T) {
-	// Create a new SQL mock
 	var db *sql.DB
 	var mock sqlmock.Sqlmock
 	var err error
@@ -77,7 +72,6 @@ func TestUserService_LoginUser(t *testing.T) {
 	}
 	defer db.Close()
 
-	// Connect GORM to the mock database
 	dialector := postgres.New(postgres.Config{
 		Conn:       db,
 		DriverName: "postgres",
@@ -88,10 +82,8 @@ func TestUserService_LoginUser(t *testing.T) {
 		t.Fatalf("Failed to open gorm: %v", err)
 	}
 
-	// Create the service with the mocked database
 	svc := NewUserService(gormDB)
 
-	// Create a hashed password for testing
 	hashedPassword, err := HashPassword("password123")
 	if err != nil {
 		t.Fatalf("Failed to hash password: %v", err)
@@ -102,7 +94,6 @@ func TestUserService_LoginUser(t *testing.T) {
 		Password: "password123",
 	}
 
-	// Mock user data retrieval
 	userRows := sqlmock.NewRows([]string{"id", "password", "role", "barangay_id"}).
 		AddRow(1, hashedPassword, "user", 1)
 
@@ -110,7 +101,6 @@ func TestUserService_LoginUser(t *testing.T) {
 		WithArgs("test@example.com").
 		WillReturnRows(userRows)
 
-	// Mock barangay data retrieval
 	barangayRows := sqlmock.NewRows([]string{"name"}).
 		AddRow("Test Barangay")
 
@@ -118,13 +108,11 @@ func TestUserService_LoginUser(t *testing.T) {
 		WithArgs(1).
 		WillReturnRows(barangayRows)
 
-	// Call the method
 	result, err := svc.LoginUser(loginUser)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	// Verify results
 	if result.ID != 1 {
 		t.Errorf("Expected user ID 1, got %d", result.ID)
 	}
@@ -141,7 +129,6 @@ func TestUserService_LoginUser(t *testing.T) {
 		t.Errorf("Expected barangay name 'Test Barangay', got %s", result.Barangay_Name)
 	}
 
-	// Verify all expectations were met
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
