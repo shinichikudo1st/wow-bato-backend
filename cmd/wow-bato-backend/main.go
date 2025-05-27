@@ -67,7 +67,6 @@ func main() {
 
 	router := gin.Default()
 
-	// Stores the SESSION_SECRET in a cookie
 	store := cookie.NewStore([]byte(os.Getenv("SESSION_SECRET")))
 	store.Options(sessions.Options{
 		Path:     "/",
@@ -76,10 +75,8 @@ func main() {
 		MaxAge:   0,
 	})
 
-	// Creates a session using the stored SESSION_SECRET key
 	router.Use(sessions.Sessions("mysession", store))
 
-	// Lists the allowed methods, headers, origin, and allow credentials
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
