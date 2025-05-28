@@ -189,3 +189,52 @@ func TestLogoutUser(t *testing.T) {
 		t.Errorf("Expected logout message, got %s", w.Body.String())
 	}
 }
+
+func TestCheckAuth(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, _, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewUserService(gormDB)
+	handlersObj := handlers.NewUserHandlers(svc)
+
+	r.GET("/checkAuth", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("authenticated", true)
+		sess.Set("user_role", "resident")
+		sess.Set("user_id", 1)
+		sess.Set("barangay_id", 1)
+		sess.Set("barangay_name", "Barangay Uno")
+		sess.Save()
+		handlersObj.CheckAuth(c)
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/checkAuth", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("sessionStatus")) {
+		t.Errorf("Expected sessionStatus in response, got %s", w.Body.String())
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("resident")) {
+		t.Errorf("Expected role in response, got %s", w.Body.String())
+	}
+}
