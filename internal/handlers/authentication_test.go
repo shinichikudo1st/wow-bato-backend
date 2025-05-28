@@ -238,3 +238,59 @@ func TestCheckAuth(t *testing.T) {
 		t.Errorf("Expected role in response, got %s", w.Body.String())
 	}
 }
+
+func TestGetUserProfile(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewUserService(gormDB)
+	handlersObj := handlers.NewUserHandlers(svc)
+
+	// Mock user profile data retrieval
+	profileRows := sqlmock.NewRows([]string{"id", "email", "first_name", "last_name", "role", "contact"}).
+		AddRow(1, "test@example.com", "John", "Doe", "resident", "+63 912 345 6789")
+	mock.ExpectQuery(`SELECT id, email, first_name, last_name, role, contact FROM "users" WHERE id = \$1`).
+		WithArgs(1).
+		WillReturnRows(profileRows)
+
+	r.GET("/profile", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("authenticated", true)
+		sess.Set("user_id", 1)
+		sess.Save()
+		handlersObj.GetUserProfile(c)
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/profile", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("User profile fetched successfully")) {
+		t.Errorf("Expected profile message, got %s", w.Body.String())
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("test@example.com")) {
+		t.Errorf("Expected email in response, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
