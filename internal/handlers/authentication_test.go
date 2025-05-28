@@ -14,6 +14,8 @@ import (
 	"wow-bato-backend/internal/services"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -146,5 +148,44 @@ func TestLoginUser(t *testing.T) {
 	}
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
+
+func TestLogoutUser(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, _, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewUserService(gormDB)
+	handlersObj := handlers.NewUserHandlers(svc)
+
+	r.POST("/logout", handlersObj.LogoutUser)
+
+	// Simulate a logged-in session
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/logout", nil)
+	// Set a session cookie (Gin will create a new session if not present, so this is enough for this test)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("User logged out successfully")) {
+		t.Errorf("Expected logout message, got %s", w.Body.String())
 	}
 }
