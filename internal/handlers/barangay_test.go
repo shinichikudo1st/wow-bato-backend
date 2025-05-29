@@ -239,3 +239,68 @@ func TestDeleteBarangay(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestUpdateBarangay(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewBarangayService(gormDB)
+	handlersObj := handlers.NewBarangayHandlers(svc)
+
+	r.PUT("/barangay/:barangay_ID", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("authenticated", true)
+		sess.Save()
+		handlersObj.UpdateBarangay(c)
+	})
+
+	// Setup DB expectations for finding and updating the barangay
+	findRows := sqlmock.NewRows([]string{"id", "name", "city", "region"}).
+		AddRow(1, "OldName", "OldCity", "OldRegion")
+	mock.ExpectQuery(`SELECT \* FROM "barangays" WHERE id = \$1 ORDER BY "barangays"."id" LIMIT 1`).
+		WithArgs(1).
+		WillReturnRows(findRows)
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "barangays" SET (.+) WHERE "id" = \$1`).
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), "NewName", "NewCity", "NewRegion", 1).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	updateBody := models.UpdateBarangay{
+		Name:   "NewName",
+		City:   "NewCity",
+		Region: "NewRegion",
+	}
+	jsonValue, _ := json.Marshal(updateBody)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/barangay/1", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Successfully Updated Barangay")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
