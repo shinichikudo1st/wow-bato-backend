@@ -78,3 +78,58 @@ func TestAddBarangay(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestGetAllBarangay(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewBarangayService(gormDB)
+	handlersObj := handlers.NewBarangayHandlers(svc)
+
+	r.GET("/barangay", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("authenticated", true)
+		sess.Save()
+		handlersObj.GetAllBarangay(c)
+	})
+
+	// Setup DB expectations for a successful select
+	mock.ExpectQuery(`SELECT id, name, city, region FROM "barangays" LIMIT \$1 OFFSET \$2`).
+		WithArgs(10, 0).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "city", "region"}).
+			AddRow(1, "Barangay1", "City1", "Region1").
+			AddRow(2, "Barangay2", "City2", "Region2"))
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/barangay?limit=10&page=1", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Successfully fetched Barangays")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Barangay1")) || !bytes.Contains(w.Body.Bytes(), []byte("Barangay2")) {
+		t.Errorf("Expected barangay names in response, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
