@@ -355,3 +355,54 @@ func TestGetBarangayOptions(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestGetPublicBarangay(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewBarangayService(gormDB)
+	handlersObj := handlers.NewBarangayHandlers(svc)
+
+	r.GET("/barangay/public", func(c *gin.Context) {
+		handlersObj.GetPublicBarangay(c)
+	})
+
+	// Setup DB expectations for a successful select
+	mock.ExpectQuery(`SELECT \* FROM "public_barangay_displays"`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "city", "region"}).
+			AddRow(1, "Barangay1", "City1", "Region1").
+			AddRow(2, "Barangay2", "City2", "Region2"))
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/barangay/public", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("All barangays retrieved")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Barangay1")) || !bytes.Contains(w.Body.Bytes(), []byte("Barangay2")) {
+		t.Errorf("Expected barangay names in response, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
