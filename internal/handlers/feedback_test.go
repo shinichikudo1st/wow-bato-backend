@@ -205,3 +205,56 @@ func TestEditFeedback(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestDeleteFeedback(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewFeedbackService(gormDB)
+	handlersObj := handlers.NewFeedbackHandlers(svc)
+
+	r.DELETE("/feedback/:feedbackID", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("authenticated", true)
+		sess.Save()
+		handlersObj.DeleteFeedback(c)
+	})
+
+	feedbackID := 7
+	mock.ExpectBegin()
+	mock.ExpectExec(`DELETE FROM "feedbacks" WHERE id = \$1`).
+		WithArgs(feedbackID).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/feedback/7", nil)
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Feedback deleted")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
