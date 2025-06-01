@@ -141,3 +141,67 @@ func TestGetAllFeedbacks(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestEditFeedback(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewFeedbackService(gormDB)
+	handlersObj := handlers.NewFeedbackHandlers(svc)
+
+	r.PUT("/feedback/:feedbackID", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("authenticated", true)
+		sess.Save()
+		handlersObj.EditFeedback(c)
+	})
+
+	feedbackID := 5
+	findRows := sqlmock.NewRows([]string{"id", "content", "user_id", "role", "project_id"}).
+		AddRow(feedbackID, "Old content", 1, "user", 1)
+	mock.ExpectQuery(`SELECT \* FROM "feedbacks" WHERE id = \$1 ORDER BY "feedbacks"."id" LIMIT 1`).
+		WithArgs(feedbackID).
+		WillReturnRows(findRows)
+
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "feedbacks" SET (.+) WHERE "id" = \$1`).
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), "New content", feedbackID).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	editBody := models.NewFeedback{
+		Content: "New content",
+	}
+	jsonValue, _ := json.Marshal(editBody)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/feedback/5", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Feedback edited")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
