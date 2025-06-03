@@ -87,5 +87,53 @@ func TestAddNewProject(t *testing.T) {
 }
 
 func TestDeleteProject(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewProjectService(gormDB)
+	handlersObj := handlers.NewProjectHandlers(svc, nil)
+
+	r.DELETE("/project/delete/:projectID", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("barangay_ID", uint(1))
+		sess.Save()
+		handlersObj.DeleteProject(c)
+	})
+
+	mock.ExpectBegin()
+	mock.ExpectExec(`DELETE FROM "projects" WHERE "projects"."id" = \$1`).
+		WithArgs(2).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/project/delete/2", nil)
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Project Deleted")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
 }
