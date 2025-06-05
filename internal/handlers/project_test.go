@@ -137,3 +137,67 @@ func TestDeleteProject(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestUpdateProject(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewProjectService(gormDB)
+	handlersObj := handlers.NewProjectHandlers(svc, nil)
+
+	r.PUT("/project/update/:projectID", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("barangay_ID", uint(1))
+		sess.Save()
+		handlersObj.UpdateProject(c)
+	})
+
+	// Mock the SELECT for existence check
+	mock.ExpectQuery(`SELECT \* FROM "projects" WHERE Barangay_ID = \$1 AND id = \$2`).
+		WithArgs(1, 2).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "start_date", "end_date", "status", "barangay_id", "category_id"}).
+			AddRow(2, "Old Name", "Old Description", "2024-06-01", "2024-06-30", "pending", 1, 1))
+	// Mock the UPDATE
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "projects" SET (.+) WHERE "id" = \$1`).
+		WithArgs("Updated Name", "Updated Description", 2).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	updateProject := models.UpdateProject{
+		Name:        "Updated Name",
+		Description: "Updated Description",
+	}
+	jsonValue, _ := json.Marshal(updateProject)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/project/update/2", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Updated Project")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
