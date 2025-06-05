@@ -201,3 +201,65 @@ func TestUpdateProject(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestGetAllProjects(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewProjectService(gormDB)
+	budgetSvc := services.NewBudgetCategoryService(gormDB)
+	handlersObj := handlers.NewProjectHandlers(svc, budgetSvc)
+
+	r.GET("/project/all/:categoryID", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("barangay_id", uint(1))
+		sess.Save()
+		handlersObj.GetAllProjects(c)
+	})
+
+	// Mock the projects query
+	mock.ExpectQuery(`SELECT id, name, status, start_date, end_date FROM "projects" WHERE barangay_id = \$1 AND category_id = \$2 LIMIT \$3 OFFSET \$4`).
+		WithArgs(1, 2, 10, 0).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "status", "start_date", "end_date"}).
+			AddRow(1, "Project 1", "pending", "2024-06-01", "2024-06-30").
+			AddRow(2, "Project 2", "ongoing", "2024-07-01", "2024-07-31"))
+
+	// Mock the budget category query
+	mock.ExpectQuery(`SELECT \* FROM "budget_categories" WHERE barangay_ID = \$1 AND id = \$2`).
+		WithArgs(1, 2).
+		WillReturnRows(sqlmock.NewRows([]string{"name", "description"}).AddRow("Infra", "Infrastructure projects"))
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/project/all/2?limit=10&page=1", nil)
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Project 1")) || !bytes.Contains(w.Body.Bytes(), []byte("Project 2")) {
+		t.Errorf("Expected project names in response, got %s", w.Body.String())
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Infra")) {
+		t.Errorf("Expected budget category name in response, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
