@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 	"wow-bato-backend/internal/handlers"
 	"wow-bato-backend/internal/models"
 	"wow-bato-backend/internal/services"
@@ -258,6 +259,67 @@ func TestGetAllProjects(t *testing.T) {
 	}
 	if !bytes.Contains(w.Body.Bytes(), []byte("Infra")) {
 		t.Errorf("Expected budget category name in response, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
+
+func TestUpdateProjectStatus(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewProjectService(gormDB)
+	handlersObj := handlers.NewProjectHandlers(svc, nil)
+
+	r.PUT("/project/status/:projectID", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("barangay_ID", uint(1))
+		sess.Save()
+		handlersObj.UpdateProjectStatus(c)
+	})
+
+	// Mock the SELECT for existence check
+	mock.ExpectQuery(`SELECT \* FROM "projects" WHERE Barangay_ID = \$1 AND id = \$2`).
+		WithArgs(1, 2).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "start_date", "end_date", "status", "barangay_id", "category_id"}).
+			AddRow(2, "Project Name", "Project Desc", "2024-06-01", "2024-06-30", "pending", 1, 1))
+	// Mock the UPDATE
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "projects" SET (.+) WHERE "id" = \$1`).
+		WithArgs("ongoing", "2024-07-01T00:00:00Z", 2).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	updateStatus := models.NewProjectStatus{
+		Status:   "ongoing",
+		FlexDate: time.Date(2024, 7, 1, 0, 0, 0, 0, time.UTC),
+	}
+	jsonValue, _ := json.Marshal(updateStatus)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/project/status/2", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
 	}
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("Unfulfilled expectations: %v", err)
