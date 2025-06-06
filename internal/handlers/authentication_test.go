@@ -1,6 +1,3 @@
-// authentication_test.go
-// Package handlers_test provides unit tests for the handlers package.
-// Test the authentication.go functions
 package handlers_test
 
 import (
