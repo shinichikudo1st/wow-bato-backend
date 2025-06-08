@@ -77,3 +77,59 @@ func TestAddNewBudgetItem(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestGetAllBudgetItem(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewBudgetItemService(gormDB)
+	handlersObj := handlers.NewBudgetItemHandlers(svc)
+
+	r.GET("/budget-item/all/:projectID", func(c *gin.Context) {
+		handlersObj.GetAllBudgetItem(c)
+	})
+
+	// Mock the budget items query
+	mock.ExpectQuery(`SELECT \* FROM "budget_items" WHERE project_id = \$1 LIMIT \$2 OFFSET \$3`).
+		WithArgs(1, 5, 0).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "amount_allocated", "description", "status", "approval_date", "project_id"}).
+			AddRow(1, "Budget Item 1", 500.0, "Desc 1", "pending", nil, 1).
+			AddRow(2, "Budget Item 2", 1000.0, "Desc 2", "approved", nil, 1))
+
+	// Mock the count query
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "budget_items" WHERE project_id = \$1`).
+		WithArgs(1).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(2))
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/budget-item/all/1?filter=All&page=1", nil)
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Budget Item 1")) || !bytes.Contains(w.Body.Bytes(), []byte("Budget Item 2")) {
+		t.Errorf("Expected budget item names in response, got %s", w.Body.String())
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("count")) {
+		t.Errorf("Expected count in response, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
