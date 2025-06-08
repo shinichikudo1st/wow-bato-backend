@@ -180,3 +180,61 @@ func TestGetSingleBudgetItem(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestUpdateStatusBudgetItem(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewBudgetItemService(gormDB)
+	handlersObj := handlers.NewBudgetItemHandlers(svc)
+
+	r.PUT("/budget-item/status/:budgetItemID", func(c *gin.Context) {
+		handlersObj.UpdateStatusBudgetItem(c)
+	})
+
+	// Mock the SELECT for existence check
+	mock.ExpectQuery(`SELECT \* FROM "budget_items" WHERE id = \$1 ORDER BY "budget_items"."id" LIMIT 1`).
+		WithArgs(2).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "amount_allocated", "description", "status", "approval_date", "project_id"}).
+			AddRow(2, "Budget Item 2", 1000.0, "Desc 2", "pending", nil, 1))
+	// Mock the UPDATE
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "budget_items" SET (.+) WHERE "id" = \$1`).
+		WithArgs("Approved", 2).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	updateStatus := models.UpdateStatus{
+		Status: "approve",
+	}
+	jsonValue, _ := json.Marshal(updateStatus)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/budget-item/status/2", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Budget Item Updated")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
