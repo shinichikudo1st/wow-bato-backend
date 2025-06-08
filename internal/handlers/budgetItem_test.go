@@ -133,3 +133,50 @@ func TestGetAllBudgetItem(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestGetSingleBudgetItem(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewBudgetItemService(gormDB)
+	handlersObj := handlers.NewBudgetItemHandlers(svc)
+
+	r.GET("/budget-item/single/:projectID/:budgetItemID", func(c *gin.Context) {
+		handlersObj.GetSingleBudgetItem(c)
+	})
+
+	// Mock the single budget item query
+	mock.ExpectQuery(`SELECT \* FROM "budget_items" WHERE categoryID = \$1 AND status = \$2 ORDER BY "budget_items"."id" LIMIT 1`).
+		WithArgs(1, 2).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "amount_allocated", "description", "status", "approval_date", "project_id"}).
+			AddRow(2, "Budget Item 2", 1000.0, "Desc 2", "approved", nil, 1))
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/budget-item/single/1/2", nil)
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Budget Item 2")) {
+		t.Errorf("Expected budget item name in response, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
