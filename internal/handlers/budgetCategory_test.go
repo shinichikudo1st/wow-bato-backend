@@ -179,3 +179,59 @@ func TestUpdateBudgetCategory(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestGetAllBudgetCategory(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewBudgetCategoryService(gormDB)
+	handlersObj := handlers.NewBudgetCategoryHandlers(svc)
+
+	r.GET("/budget-category/all/:barangay_ID", func(c *gin.Context) {
+		handlersObj.GetAllBudgetCategory(c)
+	})
+
+	// Mock the budget categories query
+	mock.ExpectQuery(`SELECT budget_categories.id, budget_categories.name, budget_categories.description, budget_categories.barangay_ID, COUNT\(projects.id\) as project_count FROM "budget_categories" LEFT JOIN projects ON projects.category_id = budget_categories.id WHERE budget_categories.barangay_ID = \$1 GROUP BY budget_categories.id LIMIT \$2 OFFSET \$3`).
+		WithArgs(1, 10, 0).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "barangay_ID", "project_count"}).
+			AddRow(1, "Infra", "Infrastructure projects", 1, 2).
+			AddRow(2, "Health", "Health projects", 1, 1))
+
+	// Mock the count query
+	mock.ExpectQuery(`SELECT count\(\*\) FROM "budget_categories" WHERE barangay_ID = \$1`).
+		WithArgs(1).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(2))
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/budget-category/all/1?limit=10&page=1", nil)
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Infra")) || !bytes.Contains(w.Body.Bytes(), []byte("Health")) {
+		t.Errorf("Expected budget category names in response, got %s", w.Body.String())
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("count")) {
+		t.Errorf("Expected count in response, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
