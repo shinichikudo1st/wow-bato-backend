@@ -73,3 +73,50 @@ func TestAddBudgetCategory(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestDeleteBudgetCategory(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewBudgetCategoryService(gormDB)
+	handlersObj := handlers.NewBudgetCategoryHandlers(svc)
+
+	r.DELETE("/budget-category/delete/:budget_ID", func(c *gin.Context) {
+		handlersObj.DeleteBudgetCategory(c)
+	})
+
+	mock.ExpectBegin()
+	mock.ExpectExec(`DELETE FROM "budget_categories" WHERE "budget_categories"."id" = \$1`).
+		WithArgs(2).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/budget-category/delete/2", nil)
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Budget Category Deleted")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
