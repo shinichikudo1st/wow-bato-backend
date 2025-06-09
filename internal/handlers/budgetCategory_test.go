@@ -120,3 +120,62 @@ func TestDeleteBudgetCategory(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestUpdateBudgetCategory(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewBudgetCategoryService(gormDB)
+	handlersObj := handlers.NewBudgetCategoryHandlers(svc)
+
+	r.PUT("/budget-category/update/:budget_ID", func(c *gin.Context) {
+		handlersObj.UpdateBudgetCategory(c)
+	})
+
+	// Mock the SELECT for existence check
+	mock.ExpectQuery(`SELECT \* FROM "budget_categories" WHERE id = \$1 ORDER BY "budget_categories"."id" LIMIT 1`).
+		WithArgs(2).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "barangay_ID"}).
+			AddRow(2, "Old Name", "Old Description", 1))
+	// Mock the UPDATE
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "budget_categories" SET (.+) WHERE "id" = \$1`).
+		WithArgs("Updated Name", "Updated Description", 2).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	updateBudgetCategory := models.UpdateBudgetCategory{
+		Name:        "Updated Name",
+		Description: "Updated Description",
+	}
+	jsonValue, _ := json.Marshal(updateBudgetCategory)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/budget-category/update/2", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Budget Category Updated")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
