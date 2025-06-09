@@ -11,6 +11,7 @@ import (
 	"wow-bato-backend/internal/services"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -230,6 +231,55 @@ func TestGetAllBudgetCategory(t *testing.T) {
 	}
 	if !bytes.Contains(w.Body.Bytes(), []byte("count")) {
 		t.Errorf("Expected count in response, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
+
+func TestGetSingleBudgetCategory(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewBudgetCategoryService(gormDB)
+	handlersObj := handlers.NewBudgetCategoryHandlers(svc)
+
+	r.GET("/budget-category/single/:budget_ID", func(c *gin.Context) {
+		// Simulate session with barangay_id
+		session := sessions.Default(c)
+		session.Set("barangay_id", uint(1))
+		session.Save()
+		handlersObj.GetSingleBudgetCategory(c)
+	})
+
+	mock.ExpectQuery(`SELECT \* FROM "budget_categories" WHERE barangay_ID = \$1 AND id = \$2`).
+		WithArgs(1, 2).
+		WillReturnRows(sqlmock.NewRows([]string{"name", "description"}).AddRow("Infra", "Infrastructure projects"))
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/budget-category/single/2", nil)
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Infra")) {
+		t.Errorf("Expected budget category name in response, got %s", w.Body.String())
 	}
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("Unfulfilled expectations: %v", err)
