@@ -78,3 +78,50 @@ func TestCreateFeedbackReply(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestGetAllReplies(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewFeedbackReplyService(gormDB)
+	handlersObj := handlers.NewFeedbackReplyHandlers(svc)
+
+	r.GET("/feedback-reply/all/:feedbackID", func(c *gin.Context) {
+		handlersObj.GetAllReplies(c)
+	})
+
+	mock.ExpectQuery(`SELECT \* FROM "feedback_replies" WHERE feedback_ID = \$1`).
+		WithArgs(2).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "content", "feedback_id", "user_id"}).
+			AddRow(1, "Reply 1", 2, 1).
+			AddRow(2, "Reply 2", 2, 2))
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/feedback-reply/all/2", nil)
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Reply 1")) || !bytes.Contains(w.Body.Bytes(), []byte("Reply 2")) {
+		t.Errorf("Expected reply contents in response, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
