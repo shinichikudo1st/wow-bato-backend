@@ -48,7 +48,6 @@ func TestAddBarangay(t *testing.T) {
 		handlersObj.AddBarangay(c)
 	})
 
-	// Setup DB expectations for a successful insert
 	mock.ExpectBegin()
 	mock.ExpectQuery(`INSERT INTO "barangays"`).
 		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(),
@@ -109,7 +108,6 @@ func TestGetAllBarangay(t *testing.T) {
 		handlersObj.GetAllBarangay(c)
 	})
 
-	// Setup DB expectations for a successful select
 	mock.ExpectQuery(`SELECT id, name, city, region FROM "barangays" LIMIT \$1 OFFSET \$2`).
 		WithArgs(10, 0).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "city", "region"}).
@@ -164,7 +162,6 @@ func TestGetSingleBarangay(t *testing.T) {
 		handlersObj.GetSingleBarangay(c)
 	})
 
-	// Setup DB expectations for a successful select
 	mock.ExpectQuery(`SELECT id, name, city, region FROM "barangays" WHERE ID = \$1 LIMIT 1`).
 		WithArgs(1).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "city", "region"}).
@@ -218,7 +215,6 @@ func TestDeleteBarangay(t *testing.T) {
 		handlersObj.DeleteBarangay(c)
 	})
 
-	// Setup DB expectations for a successful delete
 	mock.ExpectBegin()
 	mock.ExpectExec(`DELETE FROM "barangays" WHERE id = \$1`).
 		WithArgs(1).
@@ -270,7 +266,6 @@ func TestUpdateBarangay(t *testing.T) {
 		handlersObj.UpdateBarangay(c)
 	})
 
-	// Setup DB expectations for finding and updating the barangay
 	findRows := sqlmock.NewRows([]string{"id", "name", "city", "region"}).
 		AddRow(1, "OldName", "OldCity", "OldRegion")
 	mock.ExpectQuery(`SELECT \* FROM "barangays" WHERE id = \$1 ORDER BY "barangays"."id" LIMIT 1`).
@@ -332,7 +327,6 @@ func TestGetBarangayOptions(t *testing.T) {
 		handlersObj.GetBarangayOptions(c)
 	})
 
-	// Setup DB expectations for a successful select
 	mock.ExpectQuery(`SELECT id, name FROM "barangays"`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name"}).
 			AddRow(1, "Barangay1").
@@ -383,7 +377,6 @@ func TestGetPublicBarangay(t *testing.T) {
 		handlersObj.GetPublicBarangay(c)
 	})
 
-	// Setup DB expectations for a successful select
 	mock.ExpectQuery(`SELECT \* FROM "public_barangay_displays"`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "city", "region"}).
 			AddRow(1, "Barangay1", "City1", "Region1").

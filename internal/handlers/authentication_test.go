@@ -18,9 +18,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// MockUserService implements the RegisterUser method for testing
-// You can expand this mock for more methods as needed
-
 type MockUserService struct {
 	RegisterUserFunc func(models.RegisterUser) error
 }
@@ -34,7 +31,6 @@ func (m *MockUserService) RegisterUser(u models.RegisterUser) error {
 
 func TestRegisterUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	// Setup mock DB
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -56,7 +52,6 @@ func TestRegisterUser(t *testing.T) {
 	r := gin.Default()
 	r.POST("/register", handlersObj.RegisterUser)
 
-	// Setup DB expectations for a successful registration
 	mock.ExpectBegin()
 	mock.ExpectQuery(`INSERT INTO "users"`).
 		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(),
@@ -93,7 +88,6 @@ func TestRegisterUser(t *testing.T) {
 
 func TestLoginUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	// Setup mock DB
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to create mock: %v", err)
@@ -115,7 +109,6 @@ func TestLoginUser(t *testing.T) {
 	r := gin.Default()
 	r.POST("/login", handlersObj.LoginUser)
 
-	// Setup DB expectations for a successful login
 	hashedPassword, _ := services.HashPassword("password123")
 	mock.ExpectQuery(`SELECT id, password, role, barangay_id FROM "users" WHERE email = \$1`).
 		WithArgs("test@example.com").
@@ -125,7 +118,6 @@ func TestLoginUser(t *testing.T) {
 		WithArgs(1).
 		WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("Barangay Uno"))
 
-	// Prepare request body
 	loginReq := models.LoginUser{
 		Email:    "test@example.com",
 		Password: "password123",
@@ -173,10 +165,9 @@ func TestLogoutUser(t *testing.T) {
 
 	r.POST("/logout", handlersObj.LogoutUser)
 
-	// Simulate a logged-in session
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/logout", nil)
-	// Set a session cookie (Gin will create a new session if not present, so this is enough for this test)
+
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
@@ -259,7 +250,6 @@ func TestGetUserProfile(t *testing.T) {
 	svc := services.NewUserService(gormDB)
 	handlersObj := handlers.NewUserHandlers(svc)
 
-	// Mock user profile data retrieval
 	profileRows := sqlmock.NewRows([]string{"id", "email", "first_name", "last_name", "role", "contact"}).
 		AddRow(1, "test@example.com", "John", "Doe", "resident", "+63 912 345 6789")
 	mock.ExpectQuery(`SELECT id, email, first_name, last_name, role, contact FROM "users" WHERE id = \$1`).
