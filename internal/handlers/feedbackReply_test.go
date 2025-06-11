@@ -172,3 +172,67 @@ func TestDeleteFeedbackReply(t *testing.T) {
 		t.Errorf("Unfulfilled expectations: %v", err)
 	}
 }
+
+func TestEditFeedbackReply(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+	dialector := postgres.New(postgres.Config{
+		Conn:       db,
+		DriverName: "postgres",
+	})
+	gormDB, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open gorm: %v", err)
+	}
+	svc := services.NewFeedbackReplyService(gormDB)
+	handlersObj := handlers.NewFeedbackReplyHandlers(svc)
+
+	r.PUT("/feedback-reply/edit/:replyID", func(c *gin.Context) {
+		sess := sessions.Default(c)
+		sess.Set("user_id", uint(1))
+		sess.Save()
+		handlersObj.EditFeedbackReply(c)
+	})
+
+	// Mock the SELECT for existence check
+	mock.ExpectQuery(`SELECT \* FROM "feedback_replies" WHERE id = \$1 ORDER BY "feedback_replies"."id" LIMIT 1`).
+		WithArgs(2).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "content", "feedback_id", "user_id"}).
+			AddRow(2, "Old reply", 2, 1))
+	// Mock the UPDATE
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "feedback_replies" SET (.+) WHERE "id" = \$1`).
+		WithArgs("Updated reply", 2).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	editReply := models.EditReply{
+		Content: "Updated reply",
+		UserID:  1,
+	}
+	jsonValue, _ := json.Marshal(editReply)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/feedback-reply/edit/2", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("Reply Edited")) {
+		t.Errorf("Expected success message, got %s", w.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unfulfilled expectations: %v", err)
+	}
+}
