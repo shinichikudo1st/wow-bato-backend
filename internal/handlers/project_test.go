@@ -169,12 +169,10 @@ func TestUpdateProject(t *testing.T) {
 		handlersObj.UpdateProject(c)
 	})
 
-	// Mock the SELECT for existence check
 	mock.ExpectQuery(`SELECT \* FROM "projects" WHERE Barangay_ID = \$1 AND id = \$2`).
 		WithArgs(1, 2).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "start_date", "end_date", "status", "barangay_id", "category_id"}).
 			AddRow(2, "Old Name", "Old Description", "2024-06-01", "2024-06-30", "pending", 1, 1))
-	// Mock the UPDATE
 	mock.ExpectBegin()
 	mock.ExpectExec(`UPDATE "projects" SET (.+) WHERE "id" = \$1`).
 		WithArgs("Updated Name", "Updated Description", 2).
@@ -234,14 +232,12 @@ func TestGetAllProjects(t *testing.T) {
 		handlersObj.GetAllProjects(c)
 	})
 
-	// Mock the projects query
 	mock.ExpectQuery(`SELECT id, name, status, start_date, end_date FROM "projects" WHERE barangay_id = \$1 AND category_id = \$2 LIMIT \$3 OFFSET \$4`).
 		WithArgs(1, 2, 10, 0).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "status", "start_date", "end_date"}).
 			AddRow(1, "Project 1", "pending", "2024-06-01", "2024-06-30").
 			AddRow(2, "Project 2", "ongoing", "2024-07-01", "2024-07-31"))
 
-	// Mock the budget category query
 	mock.ExpectQuery(`SELECT \* FROM "budget_categories" WHERE barangay_ID = \$1 AND id = \$2`).
 		WithArgs(1, 2).
 		WillReturnRows(sqlmock.NewRows([]string{"name", "description"}).AddRow("Infra", "Infrastructure projects"))
@@ -295,12 +291,10 @@ func TestUpdateProjectStatus(t *testing.T) {
 		handlersObj.UpdateProjectStatus(c)
 	})
 
-	// Mock the SELECT for existence check
 	mock.ExpectQuery(`SELECT \* FROM "projects" WHERE Barangay_ID = \$1 AND id = \$2`).
 		WithArgs(1, 2).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "start_date", "end_date", "status", "barangay_id", "category_id"}).
 			AddRow(2, "Project Name", "Project Desc", "2024-06-01", "2024-06-30", "pending", 1, 1))
-	// Mock the UPDATE
 	mock.ExpectBegin()
 	mock.ExpectExec(`UPDATE "projects" SET (.+) WHERE "id" = \$1`).
 		WithArgs("ongoing", "2024-07-01T00:00:00Z", 2).

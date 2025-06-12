@@ -50,7 +50,6 @@ func TestCreateFeedBack(t *testing.T) {
 		handlersObj.CreateFeedBack(c)
 	})
 
-	// Setup DB expectations for a successful insert
 	mock.ExpectBegin()
 	mock.ExpectQuery(`INSERT INTO "feedbacks"`).
 		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(),
@@ -109,7 +108,6 @@ func TestGetAllFeedbacks(t *testing.T) {
 		handlersObj.GetAllFeedbacks(c)
 	})
 
-	// Setup DB expectations for feedbacks and users
 	mock.ExpectQuery(`SELECT id, content, role, project_id, user_id FROM "feedbacks" WHERE project_id = \$1`).
 		WithArgs(2).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "content", "role", "project_id", "user_id"}).

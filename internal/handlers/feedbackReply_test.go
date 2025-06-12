@@ -203,12 +203,10 @@ func TestEditFeedbackReply(t *testing.T) {
 		handlersObj.EditFeedbackReply(c)
 	})
 
-	// Mock the SELECT for existence check
 	mock.ExpectQuery(`SELECT \* FROM "feedback_replies" WHERE id = \$1 ORDER BY "feedback_replies"."id" LIMIT 1`).
 		WithArgs(2).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "content", "feedback_id", "user_id"}).
 			AddRow(2, "Old reply", 2, 1))
-	// Mock the UPDATE
 	mock.ExpectBegin()
 	mock.ExpectExec(`UPDATE "feedback_replies" SET (.+) WHERE "id" = \$1`).
 		WithArgs("Updated reply", 2).

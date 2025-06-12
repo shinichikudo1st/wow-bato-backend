@@ -38,7 +38,6 @@ func TestAddNewBudgetItem(t *testing.T) {
 	handlersObj := handlers.NewBudgetItemHandlers(svc)
 
 	r.POST("/budget-item/add/:projectID", func(c *gin.Context) {
-		// No session required for this handler
 		handlersObj.AddNewBudgetItem(c)
 	})
 
@@ -103,14 +102,12 @@ func TestGetAllBudgetItem(t *testing.T) {
 		handlersObj.GetAllBudgetItem(c)
 	})
 
-	// Mock the budget items query
 	mock.ExpectQuery(`SELECT \* FROM "budget_items" WHERE project_id = \$1 LIMIT \$2 OFFSET \$3`).
 		WithArgs(1, 5, 0).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "amount_allocated", "description", "status", "approval_date", "project_id"}).
 			AddRow(1, "Budget Item 1", 500.0, "Desc 1", "pending", nil, 1).
 			AddRow(2, "Budget Item 2", 1000.0, "Desc 2", "approved", nil, 1))
 
-	// Mock the count query
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "budget_items" WHERE project_id = \$1`).
 		WithArgs(1).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(2))
@@ -159,7 +156,6 @@ func TestGetSingleBudgetItem(t *testing.T) {
 		handlersObj.GetSingleBudgetItem(c)
 	})
 
-	// Mock the single budget item query
 	mock.ExpectQuery(`SELECT \* FROM "budget_items" WHERE categoryID = \$1 AND status = \$2 ORDER BY "budget_items"."id" LIMIT 1`).
 		WithArgs(1, 2).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "amount_allocated", "description", "status", "approval_date", "project_id"}).
@@ -206,12 +202,10 @@ func TestUpdateStatusBudgetItem(t *testing.T) {
 		handlersObj.UpdateStatusBudgetItem(c)
 	})
 
-	// Mock the SELECT for existence check
 	mock.ExpectQuery(`SELECT \* FROM "budget_items" WHERE id = \$1 ORDER BY "budget_items"."id" LIMIT 1`).
 		WithArgs(2).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "amount_allocated", "description", "status", "approval_date", "project_id"}).
 			AddRow(2, "Budget Item 2", 1000.0, "Desc 2", "pending", nil, 1))
-	// Mock the UPDATE
 	mock.ExpectBegin()
 	mock.ExpectExec(`UPDATE "budget_items" SET (.+) WHERE "id" = \$1`).
 		WithArgs("Approved", 2).

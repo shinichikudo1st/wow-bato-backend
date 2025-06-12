@@ -147,12 +147,10 @@ func TestUpdateBudgetCategory(t *testing.T) {
 		handlersObj.UpdateBudgetCategory(c)
 	})
 
-	// Mock the SELECT for existence check
 	mock.ExpectQuery(`SELECT \* FROM "budget_categories" WHERE id = \$1 ORDER BY "budget_categories"."id" LIMIT 1`).
 		WithArgs(2).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "barangay_ID"}).
 			AddRow(2, "Old Name", "Old Description", 1))
-	// Mock the UPDATE
 	mock.ExpectBegin()
 	mock.ExpectExec(`UPDATE "budget_categories" SET (.+) WHERE "id" = \$1`).
 		WithArgs("Updated Name", "Updated Description", 2).
@@ -206,14 +204,12 @@ func TestGetAllBudgetCategory(t *testing.T) {
 		handlersObj.GetAllBudgetCategory(c)
 	})
 
-	// Mock the budget categories query
 	mock.ExpectQuery(`SELECT budget_categories.id, budget_categories.name, budget_categories.description, budget_categories.barangay_ID, COUNT\(projects.id\) as project_count FROM "budget_categories" LEFT JOIN projects ON projects.category_id = budget_categories.id WHERE budget_categories.barangay_ID = \$1 GROUP BY budget_categories.id LIMIT \$2 OFFSET \$3`).
 		WithArgs(1, 10, 0).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "barangay_ID", "project_count"}).
 			AddRow(1, "Infra", "Infrastructure projects", 1, 2).
 			AddRow(2, "Health", "Health projects", 1, 1))
 
-	// Mock the count query
 	mock.ExpectQuery(`SELECT count\(\*\) FROM "budget_categories" WHERE barangay_ID = \$1`).
 		WithArgs(1).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(2))
@@ -259,7 +255,6 @@ func TestGetSingleBudgetCategory(t *testing.T) {
 	handlersObj := handlers.NewBudgetCategoryHandlers(svc)
 
 	r.GET("/budget-category/single/:budget_ID", func(c *gin.Context) {
-		// Simulate session with barangay_id
 		session := sessions.Default(c)
 		session.Set("barangay_id", uint(1))
 		session.Save()
