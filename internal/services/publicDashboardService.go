@@ -29,14 +29,10 @@ func (s *PublicDashboardService) GetPublicDashboardStats() (PublicDashboardStats
 	stats.UsersByRole = make(map[string]int64)
 	stats.BudgetByProject = make(map[string]float64)
 
-	// Total Projects
 	s.db.Model(&models.Project{}).Count(&stats.TotalProjects)
-	// Total Users
 	s.db.Model(&models.User{}).Count(&stats.TotalUsers)
-	// Total Budget Items
 	s.db.Model(&models.Budget_Item{}).Count(&stats.TotalBudgetItems)
 
-	// Projects by Status
 	var statusResults []struct {
 		Status string
 		Count  int64
@@ -46,7 +42,6 @@ func (s *PublicDashboardService) GetPublicDashboardStats() (PublicDashboardStats
 		stats.ProjectsByStatus[r.Status] = r.Count
 	}
 
-	// Users by Role
 	var roleResults []struct {
 		Role  string
 		Count int64
@@ -56,7 +51,6 @@ func (s *PublicDashboardService) GetPublicDashboardStats() (PublicDashboardStats
 		stats.UsersByRole[r.Role] = r.Count
 	}
 
-	// Budget Allocation by Project
 	var budgetResults []struct {
 		ProjectName string
 		TotalBudget float64
