@@ -72,3 +72,15 @@ func (s *PublicDashboardService) GetPublicDashboardStats() (PublicDashboardStats
 
 	return stats, nil
 }
+
+func (s *PublicDashboardService) CompleteVSIncompleteProjects() {
+	
+}
+
+func (s *PublicDashboardService) EsimatedDurationVSRealDuration() {
+	
+}
+
+func (s *PublicDashboardService) BudgetVSDuration() {
+	
+}
