@@ -78,3 +78,15 @@ func (s *PublicDashboardService) EsimatedDurationVSRealDuration() {
 func (s *PublicDashboardService) BudgetVSDuration() {
 	
 }
+
+func (s *PublicDashboardService) AverageItemCostPerProject() {
+	
+}
+
+func (s *PublicDashboardService) ProjectCostVSDuration() {
+	
+}
+
+func (s *PublicDashboardService) ProperlySpentFunds() {
+	
+}
