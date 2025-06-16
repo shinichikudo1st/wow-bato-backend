@@ -67,26 +67,38 @@ func (s *PublicDashboardService) GetPublicDashboardStats() (PublicDashboardStats
 	return stats, nil
 }
 
-func (s *PublicDashboardService) CompleteVSIncompleteProjects() {
-	
+type CompleteStats struct {
+	Complete   int64 `json:"complete"`
+	Incomplete int64 `json:"incomplete"`
+}
+
+func (s *PublicDashboardService) CompleteVSIncompleteProjects() (CompleteStats, error) {
+	var stats CompleteStats
+	if err := s.db.Model(&models.Project{}).Where("status = ?", "completed").Count(&stats.Complete).Error; err != nil {
+		return stats, err
+	}
+	if err := s.db.Model(&models.Project{}).Where("status != ?", "completed").Count(&stats.Incomplete).Error; err != nil {
+		return stats, err
+	}
+	return stats, nil
 }
 
 func (s *PublicDashboardService) EsimatedDurationVSRealDuration() {
-	
+
 }
 
 func (s *PublicDashboardService) BudgetVSDuration() {
-	
+
 }
 
 func (s *PublicDashboardService) AverageItemCostPerProject() {
-	
+
 }
 
 func (s *PublicDashboardService) ProjectCostVSDuration() {
-	
+
 }
 
 func (s *PublicDashboardService) ProperlySpentFunds() {
-	
+
 }
