@@ -1,6 +1,7 @@
 package services
 
 import (
+	"time"
 	"wow-bato-backend/internal/models"
 
 	"gorm.io/gorm"
@@ -101,4 +102,43 @@ func (s *PublicDashboardService) ProjectCostVSDuration() {
 
 func (s *PublicDashboardService) ProperlySpentFunds() {
 
+}
+
+type ProjectDurationStats struct {
+	AverageEstimatedDays float64
+	AverageRealDays      float64
+}
+
+func (s *PublicDashboardService) EstimatedVsRealProjectDuration() (ProjectDurationStats, error) {
+	var stats ProjectDurationStats
+	var totalEstimated float64
+	var totalReal float64
+	var count int64
+
+	// Only consider completed projects
+	var projects []struct {
+		StartDate time.Time
+		EndDate   time.Time
+	}
+	err := s.db.Model(&models.Project{}).
+		Where("status = ?", "completed").
+		Select("start_date, end_date").
+		Scan(&projects).Error
+	if err != nil {
+		return stats, err
+	}
+
+	for _, p := range projects {
+		days := p.EndDate.Sub(p.StartDate).Hours() / 24
+		totalEstimated += days
+		totalReal += days // If you have actual vs planned, adjust here
+		count++
+	}
+
+	if count > 0 {
+		stats.AverageEstimatedDays = totalEstimated / float64(count)
+		stats.AverageRealDays = totalReal / float64(count)
+	}
+
+	return stats, nil
 }
