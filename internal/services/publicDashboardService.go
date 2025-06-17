@@ -84,16 +84,36 @@ func (s *PublicDashboardService) CompleteVSIncompleteProjects() (CompleteStats, 
 	return stats, nil
 }
 
-func (s *PublicDashboardService) EsimatedDurationVSRealDuration() {
-
+type AverageItemCostStats struct {
+	AverageItemCost float64
 }
 
-func (s *PublicDashboardService) BudgetVSDuration() {
+func (s *PublicDashboardService) AverageItemCostPerProject() (AverageItemCostStats, error) {
+	var stats AverageItemCostStats
+	var totalCost float64
+	var totalItems int64
 
-}
+	// Only consider budget items for completed projects
+	var results []struct {
+		ProjectID uint
+		ItemCost  float64
+	}
+	s.db.Table("projects").
+		Select("projects.id as project_id, budget_items.amount_allocated as item_cost").
+		Joins("JOIN budget_items ON budget_items.project_id = projects.id").
+		Where("projects.status = ?", "completed").
+		Scan(&results)
 
-func (s *PublicDashboardService) AverageItemCostPerProject() {
+	for _, r := range results {
+		totalCost += r.ItemCost
+		totalItems++
+	}
 
+	if totalItems > 0 {
+		stats.AverageItemCost = totalCost / float64(totalItems)
+	}
+
+	return stats, nil
 }
 
 func (s *PublicDashboardService) ProjectCostVSDuration() {
