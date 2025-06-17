@@ -116,8 +116,42 @@ func (s *PublicDashboardService) AverageItemCostPerProject() (AverageItemCostSta
 	return stats, nil
 }
 
-func (s *PublicDashboardService) ProjectCostVSDuration() {
+type ProjectCostVsDurationStats struct {
+	AverageCostPerDay float64
+}
 
+func (s *PublicDashboardService) ProjectCostVSDuration() (ProjectCostVsDurationStats, error) {
+	var stats ProjectCostVsDurationStats
+	var totalCost float64
+	var totalDays float64
+
+	// Join projects and budget_items, only for completed projects
+	var results []struct {
+		ProjectID uint
+		StartDate time.Time
+		EndDate   time.Time
+		TotalCost float64
+	}
+	s.db.Table("projects").
+		Select("projects.id as project_id, projects.start_date, projects.end_date, SUM(budget_items.amount_allocated) as total_cost").
+		Joins("LEFT JOIN budget_items ON budget_items.project_id = projects.id").
+		Where("projects.status = ?", "completed").
+		Group("projects.id, projects.start_date, projects.end_date").
+		Scan(&results)
+
+	for _, r := range results {
+		days := r.EndDate.Sub(r.StartDate).Hours() / 24
+		if days > 0 {
+			totalCost += r.TotalCost
+			totalDays += days
+		}
+	}
+
+	if totalDays > 0 {
+		stats.AverageCostPerDay = totalCost / totalDays
+	}
+
+	return stats, nil
 }
 
 func (s *PublicDashboardService) ProperlySpentFunds() {
