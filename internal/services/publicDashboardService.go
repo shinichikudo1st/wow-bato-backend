@@ -142,3 +142,41 @@ func (s *PublicDashboardService) EstimatedVsRealProjectDuration() (ProjectDurati
 
 	return stats, nil
 }
+
+type BudgetVsDurationStats struct {
+	AverageBudgetPerDay float64
+}
+
+func (s *PublicDashboardService) BudgetVsDuration() (BudgetVsDurationStats, error) {
+	var stats BudgetVsDurationStats
+	var totalBudget float64
+	var totalDays float64
+
+	// Join projects and budget_items, only for completed projects
+	var results []struct {
+		ProjectID uint
+		StartDate time.Time
+		EndDate   time.Time
+		Budget    float64
+	}
+	s.db.Table("projects").
+		Select("projects.id as project_id, projects.start_date, projects.end_date, SUM(budget_items.amount_allocated) as budget").
+		Joins("LEFT JOIN budget_items ON budget_items.project_id = projects.id").
+		Where("projects.status = ?", "completed").
+		Group("projects.id, projects.start_date, projects.end_date").
+		Scan(&results)
+
+	for _, r := range results {
+		days := r.EndDate.Sub(r.StartDate).Hours() / 24
+		if days > 0 {
+			totalBudget += r.Budget
+			totalDays += days
+		}
+	}
+
+	if totalDays > 0 {
+		stats.AverageBudgetPerDay = totalBudget / totalDays
+	}
+
+	return stats, nil
+}
