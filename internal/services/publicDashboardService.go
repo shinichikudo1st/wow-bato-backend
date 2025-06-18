@@ -251,3 +251,31 @@ func (s *PublicDashboardService) TopBarangaysByProjectCount(limit int) ([]TopBar
 		Scan(&results).Error
 	return results, err
 }
+
+type CategoryCompletionRate struct {
+	CategoryName      string
+	TotalProjects     int64
+	CompletedProjects int64
+	CompletionRate    float64 // as a percentage
+}
+
+func (s *PublicDashboardService) ProjectCompletionRateByCategory() ([]CategoryCompletionRate, error) {
+	var results []CategoryCompletionRate
+	err := s.db.Table("budget_categories").
+		Select(`
+			budget_categories.name as category_name,
+			COUNT(projects.id) as total_projects,
+			SUM(CASE WHEN projects.status = 'completed' THEN 1 ELSE 0 END) as completed_projects
+		`).
+		Joins("LEFT JOIN projects ON projects.category_id = budget_categories.id").
+		Group("budget_categories.id").
+		Scan(&results).Error
+
+	// Calculate completion rate
+	for i := range results {
+		if results[i].TotalProjects > 0 {
+			results[i].CompletionRate = float64(results[i].CompletedProjects) / float64(results[i].TotalProjects) * 100
+		}
+	}
+	return results, err
+}
