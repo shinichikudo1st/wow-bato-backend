@@ -294,3 +294,31 @@ func (s *PublicDashboardService) FeedbacksPerProject() ([]ProjectFeedbackStats, 
 		Scan(&results).Error
 	return results, err
 }
+
+type ProjectBudgetUtilization struct {
+	ProjectName     string
+	AllocatedBudget float64
+	SpentBudget     float64
+	UtilizationRate float64 // as a percentage
+}
+
+func (s *PublicDashboardService) BudgetUtilizationByProject() ([]ProjectBudgetUtilization, error) {
+	var results []ProjectBudgetUtilization
+	err := s.db.Table("projects").
+		Select(`
+			projects.name as project_name,
+			projects.allocated_budget, -- you need to have this field in your Project model
+			COALESCE(SUM(budget_items.amount_allocated), 0) as spent_budget
+		`).
+		Joins("LEFT JOIN budget_items ON budget_items.project_id = projects.id").
+		Group("projects.id").
+		Scan(&results).Error
+
+	// Calculate utilization rate
+	for i := range results {
+		if results[i].AllocatedBudget > 0 {
+			results[i].UtilizationRate = (results[i].SpentBudget / results[i].AllocatedBudget) * 100
+		}
+	}
+	return results, err
+}
