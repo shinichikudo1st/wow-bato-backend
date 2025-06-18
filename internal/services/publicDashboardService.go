@@ -279,3 +279,18 @@ func (s *PublicDashboardService) ProjectCompletionRateByCategory() ([]CategoryCo
 	}
 	return results, err
 }
+
+type ProjectFeedbackStats struct {
+	ProjectName   string
+	FeedbackCount int64
+}
+
+func (s *PublicDashboardService) FeedbacksPerProject() ([]ProjectFeedbackStats, error) {
+	var results []ProjectFeedbackStats
+	err := s.db.Table("projects").
+		Select("projects.name as project_name, COUNT(feedbacks.id) as feedback_count").
+		Joins("LEFT JOIN feedbacks ON feedbacks.project_id = projects.id").
+		Group("projects.id").
+		Scan(&results).Error
+	return results, err
+}
