@@ -234,3 +234,20 @@ func (s *PublicDashboardService) BudgetVsDuration() (BudgetVsDurationStats, erro
 
 	return stats, nil
 }
+
+type TopBarangayProjects struct {
+	BarangayName string
+	ProjectCount int64
+}
+
+func (s *PublicDashboardService) TopBarangaysByProjectCount(limit int) ([]TopBarangayProjects, error) {
+	var results []TopBarangayProjects
+	err := s.db.Table("barangays").
+		Select("barangays.name as barangay_name, COUNT(projects.id) as project_count").
+		Joins("LEFT JOIN projects ON projects.barangay_id = barangays.id").
+		Group("barangays.id").
+		Order("project_count DESC").
+		Limit(limit).
+		Scan(&results).Error
+	return results, err
+}
