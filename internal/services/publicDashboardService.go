@@ -340,3 +340,18 @@ func (s *PublicDashboardService) MostDelayedProjects(limit int) ([]DelayedProjec
 		Scan(&results).Error
 	return results, err
 }
+
+type ProjectNoFeedback struct {
+	ProjectName string
+}
+
+func (s *PublicDashboardService) ProjectsWithoutFeedback() ([]ProjectNoFeedback, error) {
+	var results []ProjectNoFeedback
+	err := s.db.Table("projects").
+		Select("projects.name as project_name").
+		Joins("LEFT JOIN feedbacks ON feedbacks.project_id = projects.id").
+		Group("projects.id").
+		Having("COUNT(feedbacks.id) = 0").
+		Scan(&results).Error
+	return results, err
+}
