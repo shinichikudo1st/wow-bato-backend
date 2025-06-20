@@ -373,3 +373,19 @@ func (s *PublicDashboardService) TopUsersByFeedback(limit int) ([]TopUserFeedbac
 		Scan(&results).Error
 	return results, err
 }
+
+type CategoryCost struct {
+	CategoryName string
+	AvgCost      float64
+}
+
+func (s *PublicDashboardService) AverageProjectCostByCategory() ([]CategoryCost, error) {
+	var results []CategoryCost
+	err := s.db.Table("budget_categories").
+		Select("budget_categories.name as category_name, AVG(budget_items.amount_allocated) as avg_cost").
+		Joins("LEFT JOIN projects ON projects.category_id = budget_categories.id").
+		Joins("LEFT JOIN budget_items ON budget_items.project_id = projects.id").
+		Group("budget_categories.id").
+		Scan(&results).Error
+	return results, err
+}
