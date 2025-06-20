@@ -322,3 +322,21 @@ func (s *PublicDashboardService) BudgetUtilizationByProject() ([]ProjectBudgetUt
 	}
 	return results, err
 }
+
+type DelayedProject struct {
+	ProjectName string
+	PlannedDays int
+	ActualDays  int
+	DelayDays   int
+}
+
+func (s *PublicDashboardService) MostDelayedProjects(limit int) ([]DelayedProject, error) {
+	var results []DelayedProject
+	err := s.db.Table("projects").
+		Select("name as project_name, EXTRACT(DAY FROM end_date - start_date) as planned_days, EXTRACT(DAY FROM end_date - start_date) as actual_days, (EXTRACT(DAY FROM end_date - start_date) - EXTRACT(DAY FROM end_date - start_date)) as delay_days").
+		Where("status = ?", "completed").
+		Order("delay_days DESC").
+		Limit(limit).
+		Scan(&results).Error
+	return results, err
+}
