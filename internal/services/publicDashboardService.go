@@ -355,3 +355,21 @@ func (s *PublicDashboardService) ProjectsWithoutFeedback() ([]ProjectNoFeedback,
 		Scan(&results).Error
 	return results, err
 }
+
+type TopUserFeedback struct {
+	UserID    uint
+	UserName  string
+	Feedbacks int64
+}
+
+func (s *PublicDashboardService) TopUsersByFeedback(limit int) ([]TopUserFeedback, error) {
+	var results []TopUserFeedback
+	err := s.db.Table("users").
+		Select("users.id as user_id, users.first_name || ' ' || users.last_name as user_name, COUNT(feedbacks.id) as feedbacks").
+		Joins("LEFT JOIN feedbacks ON feedbacks.user_id = users.id").
+		Group("users.id").
+		Order("feedbacks DESC").
+		Limit(limit).
+		Scan(&results).Error
+	return results, err
+}
