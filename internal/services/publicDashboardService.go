@@ -389,3 +389,18 @@ func (s *PublicDashboardService) AverageProjectCostByCategory() ([]CategoryCost,
 		Scan(&results).Error
 	return results, err
 }
+
+type MonthlyProjectStart struct {
+	YearMonth string
+	Count     int64
+}
+
+func (s *PublicDashboardService) MonthlyProjectStarts() ([]MonthlyProjectStart, error) {
+	var results []MonthlyProjectStart
+	err := s.db.Table("projects").
+		Select("TO_CHAR(start_date, 'YYYY-MM') as year_month, COUNT(*) as count").
+		Group("year_month").
+		Order("year_month").
+		Scan(&results).Error
+	return results, err
+}
