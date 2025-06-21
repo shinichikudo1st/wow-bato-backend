@@ -404,3 +404,20 @@ func (s *PublicDashboardService) MonthlyProjectStarts() ([]MonthlyProjectStart, 
 		Scan(&results).Error
 	return results, err
 }
+
+type ExpensiveProject struct {
+	ProjectName string
+	TotalCost   float64
+}
+
+func (s *PublicDashboardService) MostExpensiveProjects(limit int) ([]ExpensiveProject, error) {
+	var results []ExpensiveProject
+	err := s.db.Table("projects").
+		Select("projects.name as project_name, COALESCE(SUM(budget_items.amount_allocated), 0) as total_cost").
+		Joins("LEFT JOIN budget_items ON budget_items.project_id = projects.id").
+		Group("projects.id").
+		Order("total_cost DESC").
+		Limit(limit).
+		Scan(&results).Error
+	return results, err
+}
