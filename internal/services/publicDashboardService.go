@@ -421,3 +421,20 @@ func (s *PublicDashboardService) MostExpensiveProjects(limit int) ([]ExpensivePr
 		Scan(&results).Error
 	return results, err
 }
+
+type ProjectFeedbackCount struct {
+	ProjectName   string
+	FeedbackCount int64
+}
+
+func (s *PublicDashboardService) ProjectsWithMostFeedback(limit int) ([]ProjectFeedbackCount, error) {
+	var results []ProjectFeedbackCount
+	err := s.db.Table("projects").
+		Select("projects.name as project_name, COUNT(feedbacks.id) as feedback_count").
+		Joins("LEFT JOIN feedbacks ON feedbacks.project_id = projects.id").
+		Group("projects.id").
+		Order("feedback_count DESC").
+		Limit(limit).
+		Scan(&results).Error
+	return results, err
+}
