@@ -457,3 +457,18 @@ func (s *PublicDashboardService) ProjectsWithoutBudgetItems() ([]ProjectNoBudget
 		Scan(&results).Error
 	return results, err
 }
+
+type BarangayDurationStats struct {
+	BarangayName string
+	AvgDuration  float64 // in days
+}
+
+func (s *PublicDashboardService) AverageProjectDurationByBarangay() ([]BarangayDurationStats, error) {
+	var results []BarangayDurationStats
+	err := s.db.Table("barangays").
+		Select("barangays.name as barangay_name, AVG(EXTRACT(DAY FROM projects.end_date - projects.start_date)) as avg_duration").
+		Joins("LEFT JOIN projects ON projects.barangay_id = barangays.id").
+		Group("barangays.id").
+		Scan(&results).Error
+	return results, err
+}
