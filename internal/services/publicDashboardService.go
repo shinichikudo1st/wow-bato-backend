@@ -442,3 +442,18 @@ func (s *PublicDashboardService) MostActiveBarangaysByFeedback(limit int) ([]Bar
 		Scan(&results).Error
 	return results, err
 }
+
+type ProjectNoBudgetItem struct {
+	ProjectName string
+}
+
+func (s *PublicDashboardService) ProjectsWithoutBudgetItems() ([]ProjectNoBudgetItem, error) {
+	var results []ProjectNoBudgetItem
+	err := s.db.Table("projects").
+		Select("projects.name as project_name").
+		Joins("LEFT JOIN budget_items ON budget_items.project_id = projects.id").
+		Group("projects.id").
+		Having("COUNT(budget_items.id) = 0").
+		Scan(&results).Error
+	return results, err
+}
