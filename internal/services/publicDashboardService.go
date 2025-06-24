@@ -424,3 +424,21 @@ func (s *PublicDashboardService) TopCategoriesByTotalCost(limit int) ([]Category
 		Scan(&results).Error
 	return results, err
 }
+
+type BarangayFeedbackStats struct {
+	BarangayName  string
+	FeedbackCount int64
+}
+
+func (s *PublicDashboardService) MostActiveBarangaysByFeedback(limit int) ([]BarangayFeedbackStats, error) {
+	var results []BarangayFeedbackStats
+	err := s.db.Table("barangays").
+		Select("barangays.name as barangay_name, COUNT(feedbacks.id) as feedback_count").
+		Joins("LEFT JOIN projects ON projects.barangay_id = barangays.id").
+		Joins("LEFT JOIN feedbacks ON feedbacks.project_id = projects.id").
+		Group("barangays.id").
+		Order("feedback_count DESC").
+		Limit(limit).
+		Scan(&results).Error
+	return results, err
+}
