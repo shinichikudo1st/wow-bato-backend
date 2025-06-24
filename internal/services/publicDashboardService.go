@@ -385,3 +385,24 @@ func (s *PublicDashboardService) ProjectsWithMostFeedback(limit int) ([]ProjectF
 		Scan(&results).Error
 	return results, err
 }
+
+type AvgBudgetItemsPerProjectStats struct {
+	AverageItems float64
+}
+
+func (s *PublicDashboardService) AverageBudgetItemsPerProject() (AvgBudgetItemsPerProjectStats, error) {
+	var stats AvgBudgetItemsPerProjectStats
+	var totalItems int64
+	var totalProjects int64
+
+	if err := s.db.Model(&models.Budget_Item{}).Count(&totalItems).Error; err != nil {
+		return stats, err
+	}
+	if err := s.db.Model(&models.Project{}).Count(&totalProjects).Error; err != nil {
+		return stats, err
+	}
+	if totalProjects > 0 {
+		stats.AverageItems = float64(totalItems) / float64(totalProjects)
+	}
+	return stats, nil
+}
