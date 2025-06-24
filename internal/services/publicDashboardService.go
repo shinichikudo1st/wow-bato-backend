@@ -406,3 +406,21 @@ func (s *PublicDashboardService) AverageBudgetItemsPerProject() (AvgBudgetItemsP
 	}
 	return stats, nil
 }
+
+type CategoryTotalCost struct {
+	CategoryName string
+	TotalCost    float64
+}
+
+func (s *PublicDashboardService) TopCategoriesByTotalCost(limit int) ([]CategoryTotalCost, error) {
+	var results []CategoryTotalCost
+	err := s.db.Table("budget_categories").
+		Select("budget_categories.name as category_name, COALESCE(SUM(budget_items.amount_allocated), 0) as total_cost").
+		Joins("LEFT JOIN projects ON projects.category_id = budget_categories.id").
+		Joins("LEFT JOIN budget_items ON budget_items.project_id = projects.id").
+		Group("budget_categories.id").
+		Order("total_cost DESC").
+		Limit(limit).
+		Scan(&results).Error
+	return results, err
+}
